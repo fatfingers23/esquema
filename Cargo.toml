@@ -1,0 +1,10 @@
+[workspace]
+members = ["esquema-cli", "esquema-codegen", "esquema-validator"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+repository = "https://github.com/fatfingers23/esquema"
+license = "MIT"
+keywords = ["atproto", "bluesky"]
