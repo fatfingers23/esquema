@@ -1,6 +1,6 @@
 # esquema
 
-Rust tool for interacting with custom ATProto Lexicons.
+Rust tools for interacting with custom ATProto Lexicons.
 This is a direct fork of [atrium-codegen](https://github.com/sugyan/atrium/tree/main/lexicon/atrium-codegen), any code generation and parsing of the JSON Lexicon records are thanks to that project and their efforts.
 
 The main goal of this project is to allow you to have strong types for your custom Lexicon records and be able to validate them.
@@ -28,5 +28,5 @@ A command line tool to help you generate Rust types from lexicon definitions
 ## [esquema-codegen](./esquema-codegen)
 A fork of [atrium-codegen](https://github.com/sugyan/atrium/tree/main/lexicon/atrium-codegen) to generate the Rust types in a way that can be used by other projects
 
-## [esquema-validator](./esquema-valiator)
+## [esquema-validator](./esquema-validator)
 Future. This will be a crate to help you validate custom lexicon schemas to make sure the record is valid according to the lexicon schema
