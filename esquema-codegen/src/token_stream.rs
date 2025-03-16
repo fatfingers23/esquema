@@ -1,6 +1,7 @@
 // Forked from atrium-codegen
 // https://github.com/sugyan/atrium/blob/main/lexicon/atrium-codegen/src/token_stream.rs
 
+use atrium_lex::LexiconDoc;
 use atrium_lex::lexicon::*;
 use heck::{ToPascalCase, ToShoutySnakeCase, ToSnakeCase};
 use itertools::Itertools;
@@ -590,7 +591,7 @@ pub fn enum_common(
     refs: &[String],
     name: &str,
     schema_id: Option<&str>,
-    namespaces: &[(&str, Option<&str>)],
+    namespaces: &[(String, Option<&str>)],
 ) -> Result<TokenStream> {
     let is_record = schema_id.is_none();
     let derives = derives()?;
@@ -647,7 +648,7 @@ pub fn enum_common(
 
 pub fn impl_into_record(
     refs: &[String],
-    namespaces: &[(&str, Option<&str>)],
+    namespaces: &[(String, Option<&str>)],
 ) -> Result<TokenStream> {
     let mut impls = Vec::new();
     for r#ref in refs {
@@ -694,7 +695,7 @@ pub fn impl_into_record(
 pub fn modules(
     names: &[String],
     components: &[&str],
-    namespaces: &[(&str, Option<&str>)],
+    namespaces: &[(String, Option<&str>)],
 ) -> Result<TokenStream> {
     let v = names
         .iter()
@@ -720,10 +721,10 @@ pub fn modules(
     Ok(quote!(#(#v)*))
 }
 
-pub fn lexicon_module(namespaces: &[(&str, Option<&str>)]) -> Result<TokenStream> {
+pub fn lexicon_module(namespaces: &[(String, Option<&str>)]) -> Result<TokenStream> {
     let v = namespaces
         .iter()
-        .map(|s| {
+        .filter_map(|s| {
             let possible_namespace = s.0.split('.').next();
             if possible_namespace.is_none() {
                 panic!("unexpected namespace whole generating lexicon module");
@@ -731,9 +732,9 @@ pub fn lexicon_module(namespaces: &[(&str, Option<&str>)]) -> Result<TokenStream
             let namespace = possible_namespace.unwrap();
             let m = format_ident!("{namespace}");
             quote! {
-                // #feature
                 pub mod #m;
             }
+            .into()
         })
         .collect_vec();
     let top = quote! {

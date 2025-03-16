@@ -87,7 +87,7 @@ pub(crate) fn generate_schemas(
 pub(crate) fn generate_records(
     outdir: &Path,
     schemas: &[LexiconDoc],
-    namespaces: &[(&str, Option<&str>)],
+    namespaces: &[(String, Option<&str>)],
 ) -> Result<PathBuf, Box<dyn Error>> {
     let records = schemas
         .iter()
@@ -114,7 +114,7 @@ pub(crate) fn generate_records(
 
 pub(crate) fn generate_lexicons_mod(
     outdir: &Path,
-    namespaces: &[(&str, Option<&str>)],
+    namespaces: &[(String, Option<&str>)],
 ) -> Result<PathBuf, Box<dyn Error>> {
     let module = lexicon_module(namespaces)?;
     let path = outdir.join("mod.rs");
@@ -162,7 +162,7 @@ pub(crate) fn generate_client(
 pub(crate) fn generate_modules(
     outdir: &Path,
     schemas: &[LexiconDoc],
-    namespaces: &[(&str, Option<&str>)],
+    namespaces: &[(String, Option<&str>)],
 ) -> Result<Vec<PathBuf>, Box<dyn Error>> {
     let mut paths = find_dirs(outdir)?;
     paths.reverse();

@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     //TODO read these from the file?
-    let results = genapi(&args.lexdir, &args.outdir, &[("xyz.statusphere", None)])?;
+    let results = genapi(&args.lexdir, &args.outdir)?;
     for path in &results {
         println!(
             "{} ({} bytes)",
