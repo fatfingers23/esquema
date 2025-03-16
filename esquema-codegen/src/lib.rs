@@ -35,10 +35,13 @@ pub fn genapi(
     //HACK not sure if I need that clone
     for doc in schemas.clone() {
         results.extend(generate_schemas(&doc.clone(), &outdir)?);
-        let namespace = doc
-            .id
-            .rsplit_once('.')
-            .map_or(doc.id.clone(), |(prefix, _)| prefix.to_string());
+        //TODO do proper error handling
+        let parts: Vec<&str> = doc.id.split('.').collect();
+        let namespace = format!("{}.{}", parts[0], parts[1]);
+        //TODO prob just move to [String] for name spaces since im hard coding in None
+        if namespaces.iter().any(|x| x.0 == namespace) {
+            continue;
+        }
         namespaces.push((namespace, None));
     }
 

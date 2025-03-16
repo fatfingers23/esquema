@@ -3,8 +3,63 @@
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "$type")]
 pub enum KnownRecord {
+    #[serde(rename = "dev.baileytownsend.graph.bar.getBar")]
+    LexiconsDevBaileytownsendGraphBarGetBar(
+        Box<crate::lexicons::dev::baileytownsend::graph::bar::get_bar::Record>,
+    ),
+    #[serde(rename = "dev.baileytownsend.steps")]
+    LexiconsDevBaileytownsendSteps(
+        Box<crate::lexicons::dev::baileytownsend::steps::Record>,
+    ),
+    #[serde(rename = "dev.baileytownsend.weeklySteps")]
+    LexiconsDevBaileytownsendWeeklySteps(
+        Box<crate::lexicons::dev::baileytownsend::weekly_steps::Record>,
+    ),
     #[serde(rename = "xyz.statusphere.status")]
     LexiconsXyzStatusphereStatus(Box<crate::lexicons::xyz::statusphere::status::Record>),
+}
+impl From<crate::lexicons::dev::baileytownsend::graph::bar::get_bar::Record>
+for KnownRecord {
+    fn from(
+        record: crate::lexicons::dev::baileytownsend::graph::bar::get_bar::Record,
+    ) -> Self {
+        KnownRecord::LexiconsDevBaileytownsendGraphBarGetBar(Box::new(record))
+    }
+}
+impl From<crate::lexicons::dev::baileytownsend::graph::bar::get_bar::RecordData>
+for KnownRecord {
+    fn from(
+        record_data: crate::lexicons::dev::baileytownsend::graph::bar::get_bar::RecordData,
+    ) -> Self {
+        KnownRecord::LexiconsDevBaileytownsendGraphBarGetBar(
+            Box::new(record_data.into()),
+        )
+    }
+}
+impl From<crate::lexicons::dev::baileytownsend::steps::Record> for KnownRecord {
+    fn from(record: crate::lexicons::dev::baileytownsend::steps::Record) -> Self {
+        KnownRecord::LexiconsDevBaileytownsendSteps(Box::new(record))
+    }
+}
+impl From<crate::lexicons::dev::baileytownsend::steps::RecordData> for KnownRecord {
+    fn from(
+        record_data: crate::lexicons::dev::baileytownsend::steps::RecordData,
+    ) -> Self {
+        KnownRecord::LexiconsDevBaileytownsendSteps(Box::new(record_data.into()))
+    }
+}
+impl From<crate::lexicons::dev::baileytownsend::weekly_steps::Record> for KnownRecord {
+    fn from(record: crate::lexicons::dev::baileytownsend::weekly_steps::Record) -> Self {
+        KnownRecord::LexiconsDevBaileytownsendWeeklySteps(Box::new(record))
+    }
+}
+impl From<crate::lexicons::dev::baileytownsend::weekly_steps::RecordData>
+for KnownRecord {
+    fn from(
+        record_data: crate::lexicons::dev::baileytownsend::weekly_steps::RecordData,
+    ) -> Self {
+        KnownRecord::LexiconsDevBaileytownsendWeeklySteps(Box::new(record_data.into()))
+    }
 }
 impl From<crate::lexicons::xyz::statusphere::status::Record> for KnownRecord {
     fn from(record: crate::lexicons::xyz::statusphere::status::Record) -> Self {

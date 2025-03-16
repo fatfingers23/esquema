@@ -1,0 +1,26 @@
+{
+  "lexicon": 1,
+  "id": "dev.baileytownsend.graph.bar.getBar",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": [
+          "graph",
+          "createdAt"
+        ],
+        "properties": {
+          "graph": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}
