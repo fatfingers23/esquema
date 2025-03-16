@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-atrium-lex = { git = "https://github.com/sugyan/atrium.git", rev = "f162f815a04b5ecb0421b390d521c883c41d5f75" }
+atrium-lex.workspace = true
 
 # Serde
 serde = "1.0.160"

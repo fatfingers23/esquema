@@ -6,7 +6,9 @@ mod generator;
 mod schema;
 mod token_stream;
 
-use crate::generator::{generate_client, generate_modules, generate_records, generate_schemas};
+use crate::generator::{
+    generate_lexicons_mod, generate_modules, generate_records, generate_schemas,
+};
 use atrium_lex::LexiconDoc;
 use itertools::Itertools;
 use serde_json::from_reader;
@@ -35,8 +37,9 @@ pub fn genapi(
         results.extend(generate(&outdir, &targets)?);
     }
     results.push(generate_records(&outdir, &schemas, namespaces)?);
-    results.push(generate_client(&outdir, &schemas, namespaces)?);
+    results.push(generate_lexicons_mod(&outdir, namespaces)?);
     results.extend(generate_modules(&outdir, &schemas, namespaces)?);
+
     Ok(results)
 }
 

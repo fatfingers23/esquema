@@ -8,3 +8,10 @@ rust-version = "1.85"
 repository = "https://github.com/fatfingers23/esquema"
 license = "MIT"
 keywords = ["atproto", "bluesky"]
+
+
+[workspace.dependencies]
+atrium-api = "0.25.0"
+atrium-xrpc-client = "0.5.11"
+esquema-codegen = { version = "0.1.0", path = "esquema-codegen" }
+atrium-lex = { git = "https://github.com/sugyan/atrium.git", rev = "f162f815a04b5ecb0421b390d521c883c41d5f75" }

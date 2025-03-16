@@ -717,6 +717,30 @@ pub fn modules(
     Ok(quote!(#(#v)*))
 }
 
+pub fn lexicon_module(namespaces: &[(&str, Option<&str>)]) -> Result<TokenStream> {
+    let v = namespaces
+        .iter()
+        .map(|s| {
+            let possible_namespace = s.0.split('.').next();
+            if possible_namespace.is_none() {
+                panic!("unexpected namespace whole generating lexicon module");
+            }
+            let namespace = possible_namespace.unwrap();
+            let m = format_ident!("{namespace}");
+            quote! {
+                // #feature
+                pub mod #m;
+            }
+        })
+        .collect_vec();
+    let top = quote! {
+        pub mod record;
+    };
+    Ok(quote!(
+        #top
+        #(#v)*))
+}
+
 pub fn client(
     tree: &HashMap<String, HashSet<(&str, bool)>>,
     schemas: &HashMap<String, &LexUserType>,
