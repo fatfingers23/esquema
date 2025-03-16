@@ -1,5 +1,10 @@
 # esquema
 
+> [!WARNING]
+> ***This project is a work in progress and in the early stages of development. Many items may not work or even been
+implemented yet***
+
+
 Rust tools for interacting with custom ATProto Lexicons.
 This is a direct fork of [atrium-codegen](https://github.com/sugyan/atrium/tree/main/lexicon/atrium-codegen), any code
 generation and parsing of the JSON Lexicon records are thanks to that project and their efforts.
