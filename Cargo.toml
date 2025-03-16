@@ -1,5 +1,5 @@
 [workspace]
-members = ["esquema-cli", "esquema-codegen", "esquema-validator"]
+members = ["esquema-cli", "esquema-codegen", "esquema-example", "esquema-validator"]
 resolver = "2"
 
 [workspace.package]

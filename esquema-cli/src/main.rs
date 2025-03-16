@@ -5,15 +5,16 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 struct Args {
-    #[arg(short, long, default_value = "./esquema-codegen/tests/lexicons")]
+    #[arg(short, long, default_value = "./esquema-example/lexicons")]
     lexdir: PathBuf,
-    #[arg(short, long, default_value = "./esquema-cli/examples/lexicons")]
+    #[arg(short, long, default_value = "./esquema-example/src/lexicons")]
     outdir: PathBuf,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
+    //TODO read these from the file?
     let results = genapi(&args.lexdir, &args.outdir, &[("xyz.statusphere", None)])?;
     for path in &results {
         println!(

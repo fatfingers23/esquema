@@ -533,12 +533,8 @@ dependencies = [
 name = "esquema-cli"
 version = "0.1.0"
 dependencies = [
- "atrium-api",
- "atrium-xrpc-client",
  "clap",
- "dotenv",
  "esquema-codegen",
- "tokio",
 ]
 
 [[package]]
@@ -556,6 +552,17 @@ dependencies = [
  "serde_repr",
  "serde_with",
  "syn",
+]
+
+[[package]]
+name = "esquema-example"
+version = "0.1.0"
+dependencies = [
+ "atrium-api",
+ "atrium-xrpc-client",
+ "dotenv",
+ "serde",
+ "tokio",
 ]
 
 [[package]]

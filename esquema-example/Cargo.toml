@@ -1,0 +1,15 @@
+[package]
+name = "esquema-example"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+
+[dependencies]
+atrium-api.workspace = true
+atrium-xrpc-client.workspace = true
+dotenv = "0.15.0"
+tokio = { version = "1.44.1", features = ["full"] }
+serde = { version = "1.0.219", features = ["derive"] }

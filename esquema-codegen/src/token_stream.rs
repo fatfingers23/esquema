@@ -53,7 +53,7 @@ pub fn collection(name: &str, nsid: &str) -> TokenStream {
     quote! {
         #[derive(Debug)]
         pub struct #collection_name;
-        impl crate::types::Collection for #collection_name {
+        impl atrium_api::types::Collection for #collection_name {
             const NSID: &'static str = #nsid;
             type Record = #module_name::Record;
         }
@@ -295,7 +295,7 @@ fn lex_object(object: &LexObject, name: &str) -> Result<TokenStream> {
             #(#fields)*
         }
 
-        pub type #object_name = crate::types::Object<#struct_name>;
+        pub type #object_name = atrium_api::types::Object<#struct_name>;
     })
 }
 
@@ -381,7 +381,10 @@ fn union_type(union: &LexRefUnion, enum_name: &str) -> Result<(TokenStream, Toke
     if union.closed.unwrap_or_default() {
         Ok((description, quote!(#enum_type_name)))
     } else {
-        Ok((description, quote!(crate::types::Union<#enum_type_name>)))
+        Ok((
+            description,
+            quote!(atrium_api::types::Union<#enum_type_name>),
+        ))
     }
 }
 
@@ -392,7 +395,7 @@ fn bytes_type(bytes: &LexBytes) -> Result<(TokenStream, TokenStream)> {
 
 fn cid_link_type(cid_link: &LexCidLink) -> Result<(TokenStream, TokenStream)> {
     let description = description(&cid_link.description);
-    Ok((description, quote!(crate::types::CidLink)))
+    Ok((description, quote!(atrium_api::types::CidLink)))
 }
 
 fn array_type(
@@ -423,7 +426,7 @@ fn array_type(
 
 fn blob_type(blob: &LexBlob) -> Result<(TokenStream, TokenStream)> {
     let description = description(&blob.description);
-    Ok((description, quote!(crate::types::BlobRef)))
+    Ok((description, quote!(atrium_api::types::BlobRef)))
 }
 
 fn boolean_type(boolean: &LexBoolean) -> Result<(TokenStream, TokenStream)> {
@@ -442,22 +445,22 @@ fn integer_type(integer: &LexInteger) -> Result<(TokenStream, TokenStream)> {
             Some(max) => match max {
                 0x0000_0000..=0x0000_00fe => {
                     let max = max as u8;
-                    quote!(crate::types::LimitedU8<#max>)
+                    quote!(atrium_api::types::LimitedU8<#max>)
                 }
                 0x0000_00ff => quote!(u8),
                 0x0000_0100..=0x0000_fffe => {
                     let max = max as u16;
-                    quote!(crate::types::LimitedU16<#max>)
+                    quote!(atrium_api::types::LimitedU16<#max>)
                 }
                 0x0000_ffff => quote!(u16),
                 0x0001_0000..=0xffff_fffe => {
                     let max = max as u32;
-                    quote!(crate::types::LimitedU32<#max>)
+                    quote!(atrium_api::types::LimitedU32<#max>)
                 }
                 0xffff_ffff => quote!(u32),
                 _ => {
                     let max = max as u64;
-                    quote!(crate::types::LimitedU64<#max>)
+                    quote!(atrium_api::types::LimitedU64<#max>)
                 }
             },
             // If no maximum acceptable value is specified, assume that the integer might
@@ -473,22 +476,22 @@ fn integer_type(integer: &LexInteger) -> Result<(TokenStream, TokenStream)> {
             Some(max) => match max {
                 0x0000_0000..=0x0000_00fe => {
                     let max = max as u8;
-                    quote!(crate::types::LimitedNonZeroU8<#max>)
+                    quote!(atrium_api::types::LimitedNonZeroU8<#max>)
                 }
                 0x0000_00ff => quote!(core::num::NonZeroU8),
                 0x0000_0100..=0x0000_fffe => {
                     let max = max as u16;
-                    quote!(crate::types::LimitedNonZeroU16<#max>)
+                    quote!(atrium_api::types::LimitedNonZeroU16<#max>)
                 }
                 0x0000_ffff => quote!(core::num::NonZeroU16),
                 0x0001_0000..=0xffff_fffe => {
                     let max = max as u32;
-                    quote!(crate::types::LimitedNonZeroU32<#max>)
+                    quote!(atrium_api::types::LimitedNonZeroU32<#max>)
                 }
                 0xffff_ffff => quote!(core::num::NonZeroU32),
                 _ => {
                     let max = max as u64;
-                    quote!(crate::types::LimitedNonZeroU64<#max>)
+                    quote!(atrium_api::types::LimitedNonZeroU64<#max>)
                 }
             },
             None => quote!(core::num::NonZeroU64),
@@ -502,27 +505,27 @@ fn integer_type(integer: &LexInteger) -> Result<(TokenStream, TokenStream)> {
                 0x0000_0000..=0x0000_00ff => {
                     let min = min as u8;
                     let max = max as u8;
-                    quote!(crate::types::BoundedU8<#min, #max>)
+                    quote!(atrium_api::types::BoundedU8<#min, #max>)
                 }
                 0x0000_0100..=0x0000_ffff => {
                     let min = min as u16;
                     let max = max as u16;
-                    quote!(crate::types::BoundedU16<#min, #max>)
+                    quote!(atrium_api::types::BoundedU16<#min, #max>)
                 }
                 0x0001_0000..=0xffff_ffff => {
                     let min = min as u32;
                     let max = max as u32;
-                    quote!(crate::types::BoundedU32<#min, #max>)
+                    quote!(atrium_api::types::BoundedU32<#min, #max>)
                 }
                 _ => {
                     let min = min as u64;
                     let max = max as u64;
-                    quote!(crate::types::BoundedU64<#min, #max>)
+                    quote!(atrium_api::types::BoundedU64<#min, #max>)
                 }
             },
             None => {
                 let min = min as u64;
-                quote!(crate::types::BoundedU64<#min, u64::MAX>)
+                quote!(atrium_api::types::BoundedU64<#min, u64::MAX>)
             }
         },
         // Use a signed integer type to represent a potentially negative Lexicon integer.
@@ -550,15 +553,15 @@ fn integer_type(integer: &LexInteger) -> Result<(TokenStream, TokenStream)> {
 fn string_type(string: &LexString) -> Result<(TokenStream, TokenStream)> {
     let description = description(&string.description);
     let typ = match string.format {
-        Some(LexStringFormat::AtIdentifier) => quote!(crate::types::string::AtIdentifier),
-        Some(LexStringFormat::Cid) => quote!(crate::types::string::Cid),
-        Some(LexStringFormat::Datetime) => quote!(crate::types::string::Datetime),
-        Some(LexStringFormat::Did) => quote!(crate::types::string::Did),
-        Some(LexStringFormat::Handle) => quote!(crate::types::string::Handle),
-        Some(LexStringFormat::Nsid) => quote!(crate::types::string::Nsid),
-        Some(LexStringFormat::Language) => quote!(crate::types::string::Language),
-        Some(LexStringFormat::Tid) => quote!(crate::types::string::Tid),
-        Some(LexStringFormat::RecordKey) => quote!(crate::types::string::RecordKey),
+        Some(LexStringFormat::AtIdentifier) => quote!(atrium_api::types::string::AtIdentifier),
+        Some(LexStringFormat::Cid) => quote!(atrium_api::types::string::Cid),
+        Some(LexStringFormat::Datetime) => quote!(atrium_api::types::string::Datetime),
+        Some(LexStringFormat::Did) => quote!(atrium_api::types::string::Did),
+        Some(LexStringFormat::Handle) => quote!(atrium_api::types::string::Handle),
+        Some(LexStringFormat::Nsid) => quote!(atrium_api::types::string::Nsid),
+        Some(LexStringFormat::Language) => quote!(atrium_api::types::string::Language),
+        Some(LexStringFormat::Tid) => quote!(atrium_api::types::string::Tid),
+        Some(LexStringFormat::RecordKey) => quote!(atrium_api::types::string::RecordKey),
         // TODO: other formats (uri, at-uri)
         _ => quote!(String),
     };
@@ -567,7 +570,7 @@ fn string_type(string: &LexString) -> Result<(TokenStream, TokenStream)> {
 
 fn unknown_type(unknown: &LexUnknown) -> Result<(TokenStream, TokenStream)> {
     let description = description(&unknown.description);
-    let typ = quote!(crate::types::Unknown);
+    let typ = quote!(atrium_api::types::Unknown);
     Ok((description, typ))
 }
 
@@ -1108,7 +1111,7 @@ fn resolve_path(r#ref: &str, default: &str) -> Result<TokenStream> {
         def.to_pascal_case()
     } else {
         format!(
-            "crate::{}::{}",
+            "crate::lexicons::{}::{}",
             namespace.split('.').map(str::to_snake_case).join("::"),
             if def.chars().all(char::is_uppercase) {
                 def.to_string()
