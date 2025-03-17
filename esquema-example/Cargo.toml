@@ -13,3 +13,6 @@ atrium-xrpc-client.workspace = true
 dotenv = "0.15.0"
 tokio = { version = "1.44.1", features = ["full"] }
 serde = { version = "1.0.219", features = ["derive"] }
+
+[build-dependencies]
+esquema-codegen.workspace = true

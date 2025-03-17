@@ -561,6 +561,7 @@ dependencies = [
  "atrium-api",
  "atrium-xrpc-client",
  "dotenv",
+ "esquema-codegen",
  "serde",
  "tokio",
 ]

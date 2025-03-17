@@ -9,7 +9,11 @@ use atrium_xrpc_client::reqwest::ReqwestClient;
 use dotenv::dotenv;
 use lexicons::xyz::statusphere::Status;
 
-mod lexicons;
+//TODO lock behind feature flags on which to use?
+// mod lexicons;
+mod lexicons {
+    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
