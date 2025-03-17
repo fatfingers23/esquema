@@ -6,15 +6,8 @@ use heck::{ToPascalCase, ToShoutySnakeCase, ToSnakeCase};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use syn::{Path, Result};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum OutputType {
-    None,
-    Data,
-    Bytes,
-}
 
 pub fn user_type(
     def: &LexUserType,

@@ -3,10 +3,11 @@ use crate::lexicons::xyz;
 use crate::lexicons::xyz::statusphere::status::RecordData;
 use atrium_api::agent::atp_agent::AtpAgent;
 use atrium_api::agent::atp_agent::store::MemorySessionStore;
-use atrium_api::types::LimitedNonZeroU8;
 use atrium_api::types::string::Datetime;
+use atrium_api::types::{Collection, LimitedNonZeroU8};
 use atrium_xrpc_client::reqwest::ReqwestClient;
 use dotenv::dotenv;
+use lexicons::xyz::statusphere::Status;
 
 mod lexicons;
 
@@ -28,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         status: "🦀".to_string(),
     }
     .into();
-    let collection_str = "xyz.statusphere.status";
+
     let create_result = agent
         .api
         .com
@@ -36,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .repo
         .create_record(
             atrium_api::com::atproto::repo::create_record::InputData {
-                collection: collection_str.parse()?,
+                collection: Status::NSID.parse()?,
                 repo: atrium_api::types::string::AtIdentifier::Did(session.did.clone()),
                 rkey: None,
                 record: status.into(),
@@ -56,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .repo
         .list_records(
             atrium_api::com::atproto::repo::list_records::ParametersData {
-                collection: collection_str.parse()?,
+                collection: Status::NSID.parse()?,
                 cursor: None,
                 limit: Some(LimitedNonZeroU8::try_from(3u8)?),
                 repo: atrium_api::types::string::AtIdentifier::Did(session.did.clone()),
