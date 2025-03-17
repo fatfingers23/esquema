@@ -7,7 +7,10 @@
       "key": "tid",
       "record": {
         "type": "object",
-        "required": ["status", "createdAt"],
+        "required": [
+          "status",
+          "createdAt"
+        ],
         "properties": {
           "status": {
             "type": "string",
@@ -15,7 +18,10 @@
             "maxGraphemes": 1,
             "maxLength": 32
           },
-          "createdAt": { "type": "string", "format": "datetime" }
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
         }
       }
     }

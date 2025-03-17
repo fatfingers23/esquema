@@ -15,7 +15,7 @@ validate them.
 
 # Goals
 
-- [ ] Generate Rust types from JSON Lexicon files and be able to use them in atrium's `com.atproto.repo.*`'s record
+- [x] Generate Rust types from JSON Lexicon files and be able to use them in atrium's `com.atproto.repo.*`'s record
   methods easily via CLI
 - [ ] Generate Rust types the same way but in a `build.rs`
 - [ ] Custom Lexicon validation of data
@@ -39,16 +39,30 @@ Some problems these crates will try to solve
 
 ## [esquema-cli](./esquema-cli)
 
-A command line tool to help you generate Rust types from lexicon definitions
+A command line tool to help you generate Rust types from lexicon definitions,
+Check [[esquema-example](#esquema-example)] for an example on how to run the command.
 
 ## [esquema-codegen](./esquema-codegen)
 
 A fork of [atrium-codegen](https://github.com/sugyan/atrium/tree/main/lexicon/atrium-codegen) to generate the Rust types
-in a way that can be used by other projects
+in a way that can be used by other projects like how
+in [atrium-api](https://github.com/sugyan/atrium/tree/main/atrium-api/src) is used for Bluesky's lexicons.
 
 ## [esquema-example](./esquema-example)
 
-An example project using the Statusphere lexicon with the code generated from `esquema-cli` to create and read records
+An example project using the Statusphere lexicon with the code generated from `esquema-cli` to create and read records.
+You can generate the Rust types by running `cargo run --bin esquema-cli -- generate` from root, the args are defaulted
+to work for the example project. This will then take the lexicons found
+in [./esquema-example/lexicons](./esquema-example/lexicons) and generate Rust types from them in the
+folder [./esquema-example/src/lexicons](./esquema-example/src/lexicons). Then it's as easy as putting a `mod lexicons;`
+in
+your [main.rs](./esquema-example/src/main.rs). The module name is hard coded at this moment but plans to have it set
+from the folder name you set as output. Try changing the [status.json](./esquema-example/lexicons/status.json) around
+and see it generate new types!
+
+To run the example make sure to copy [.env.template](./esquema-example/.env.template) as `.env` in the location you run
+the example. Then make sure to fill it out. It is recommended to use a Bluesky app password and not your normal password
+for this.
 
 ## [esquema-validator](./esquema-validator)
 

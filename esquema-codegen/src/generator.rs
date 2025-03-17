@@ -4,8 +4,7 @@
 use crate::fs::find_dirs;
 use crate::schema::find_ref_unions;
 use crate::token_stream::{
-    client, collection, enum_common, impl_into_record, lexicon_module, modules, ref_unions,
-    user_type,
+    collection, enum_common, impl_into_record, lexicon_module, modules, ref_unions, user_type,
 };
 use atrium_lex::LexiconDoc;
 use atrium_lex::lexicon::LexUserType;
@@ -13,7 +12,6 @@ use heck::ToSnakeCase;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fs::{File, create_dir_all, read_dir};
 use std::io::Write;
@@ -120,42 +118,6 @@ pub(crate) fn generate_lexicons_mod(
     let path = outdir.join("mod.rs");
     write_to_file(File::create(&path)?, module)?;
 
-    Ok(path)
-}
-
-pub(crate) fn generate_client(
-    outdir: &Path,
-    schemas: &[LexiconDoc],
-    namespaces: &[(&str, Option<&str>)],
-) -> Result<PathBuf, Box<dyn Error>> {
-    let mut schema_map = HashMap::new();
-    let mut tree = HashMap::new();
-    for schema in schemas {
-        if let Some(def) = schema.defs.get("main") {
-            if matches!(
-                def,
-                LexUserType::XrpcQuery(_) | LexUserType::XrpcProcedure(_)
-            ) {
-                schema_map.insert(schema.id.clone(), def);
-                let mut parts = schema.id.split('.').collect_vec();
-                let mut is_leaf = true;
-                while let Some(part) = parts.pop() {
-                    let key = parts.join(".");
-                    tree.entry(key)
-                        .or_insert_with(HashSet::new)
-                        .insert((part, is_leaf));
-                    is_leaf = false;
-                }
-            }
-        }
-    }
-    let tokens = client(&tree, &schema_map, namespaces)?;
-    let content = quote! {
-        #![doc = r#"Structs for ATP client, implements all HTTP APIs of XRPC."#]
-        #tokens
-    };
-    let path = outdir.join("client.rs");
-    write_to_file(File::create(&path)?, content)?;
     Ok(path)
 }
 

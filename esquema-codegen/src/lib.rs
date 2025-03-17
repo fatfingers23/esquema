@@ -10,12 +10,11 @@ use crate::generator::{
     generate_lexicons_mod, generate_modules, generate_records, generate_schemas,
 };
 use atrium_lex::LexiconDoc;
-use itertools::Itertools;
 use serde_json::from_reader;
 use std::error::Error;
 use std::fs::File;
 use std::option::Option;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub fn genapi(
     lexdir: impl AsRef<Path>,
@@ -49,13 +48,5 @@ pub fn genapi(
     results.push(generate_lexicons_mod(&outdir, &namespaces)?);
     results.extend(generate_modules(&outdir, &schemas, &namespaces)?);
 
-    Ok(results)
-}
-
-fn generate(outdir: &Path, schemas: &[&LexiconDoc]) -> Result<Vec<PathBuf>, Box<dyn Error>> {
-    let mut results = Vec::new();
-    for &schema in schemas {
-        results.extend(generate_schemas(schema, outdir)?);
-    }
     Ok(results)
 }

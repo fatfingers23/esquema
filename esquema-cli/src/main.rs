@@ -48,6 +48,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Generate(args) => generate_action(args),
-        _ => unreachable!("That was not a valid command"),
     }
 }
