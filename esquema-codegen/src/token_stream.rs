@@ -289,6 +289,8 @@ fn lex_object(object: &LexObject, name: &str) -> Result<TokenStream> {
         )?);
     }
     Ok(quote! {
+        use atrium_api::types::TryFromUnknown;
+
         #description
         #derives
         #[serde(rename_all = "camelCase")]
@@ -297,6 +299,13 @@ fn lex_object(object: &LexObject, name: &str) -> Result<TokenStream> {
         }
 
         pub type #object_name = atrium_api::types::Object<#struct_name>;
+
+        impl From<atrium_api::types::Unknown> for RecordData {
+            fn from(value: atrium_api::types::Unknown) -> Self {
+                //TODO handle unwrap
+                Self::try_from_unknown(value).unwrap()
+            }
+        }
     })
 }
 
@@ -685,6 +694,12 @@ pub fn impl_into_record(
             impl From<#record_data_path> for KnownRecord {
                 fn from(record_data: #record_data_path) -> Self {
                     KnownRecord::#name(Box::new(record_data.into()))
+                }
+            }
+
+            impl Into<atrium_api::types::Unknown> for KnownRecord {
+                fn into(self) -> atrium_api::types::Unknown {
+                    atrium_api::types::TryIntoUnknown::try_into_unknown(&self).unwrap()
                 }
             }
         });

@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     for record in result.records.clone() {
-        let data = RecordData::try_from_unknown(record.value.clone())?;
+        let data: RecordData = record.value.clone().into();
         println!("record uri: {:?}", record.uri);
         println!(
             "atptools: {:?}",
