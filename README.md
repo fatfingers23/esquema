@@ -1,4 +1,4 @@
-> ## esquema
+> # esquema
 > /es'kema/ \
 > layout , scheme
 
