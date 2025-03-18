@@ -12,11 +12,12 @@ generation and parsing of the JSON Lexicon records are thanks to that project an
 
 # End Goal
 
-You should be able to easily use strong Rust types from ATProto lexicon schemas to build out your Rust project that uses ATProto records. And you should be able to validate those records structure and content against that schema. If your app depends on a field being there or being a certain length you should be able to easily check that with out manually doing it.
+You should be able to easily use strong Rust types from ATProto lexicon schemas to build out your Rust project that uses ATProto records.
+
+You should be able to validate those records structure and content against that schema. If your app depends on a field being there or being a certain length you should be able to easily check that with out manually doing it.
 
 
-
-# Goals
+# Todo list
 
 - [x] Generate Rust types from JSON Lexicon files and be able to use them in atrium's `com.atproto.repo.*`'s record
   methods easily via CLI
