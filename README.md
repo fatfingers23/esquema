@@ -10,8 +10,11 @@ Rust tools for interacting with custom ATProto Lexicons.
 This is a direct fork of [atrium-codegen](https://github.com/sugyan/atrium/tree/main/lexicon/atrium-codegen), any code
 generation and parsing of the JSON Lexicon records are thanks to that project and their efforts.
 
-The main goal of this project is to allow you to have strong types for your custom Lexicon records and be able to
-validate them.
+# End Goal
+
+You should be able to easily use strong Rust types from ATProto lexicon schemas to build out your Rust project that uses ATProto records. And you should be able to validate those records structure and content against that schema. If your app depends on a field being there or being a certain length you should be able to easily check that with out manually doing it.
+
+
 
 # Goals
 
