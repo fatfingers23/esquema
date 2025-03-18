@@ -1,16 +1,18 @@
-use crate::lexicons::record::KnownRecord;
-use crate::lexicons::xyz;
-use crate::lexicons::xyz::statusphere::status::RecordData;
-use atrium_api::agent::atp_agent::AtpAgent;
-use atrium_api::agent::atp_agent::store::MemorySessionStore;
-use atrium_api::types::string::Datetime;
-use atrium_api::types::{Collection, LimitedNonZeroU8};
+use crate::lexicons::{
+    record::KnownRecord,
+    xyz::{self, statusphere::status::RecordData},
+};
+use atrium_api::{
+    agent::atp_agent::{AtpAgent, store::MemorySessionStore},
+    types::{Collection, LimitedNonZeroU8, string::Datetime},
+};
 use atrium_xrpc_client::reqwest::ReqwestClient;
 use dotenv::dotenv;
 use lexicons::xyz::statusphere::Status;
 
-//TODO lock behind feature flags on which to use?
-// mod lexicons;
+/// This example shows how you can generate rust types from the lexicon schema files via the build.rs.
+/// This is automatic and is rebuilt on every build, can change the lexicon type, build and you'll have the new types
+/// outside of your source code.
 mod lexicons {
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 }

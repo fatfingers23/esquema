@@ -7,6 +7,7 @@ repository.workspace = true
 license.workspace = true
 keywords.workspace = true
 
+
 [dependencies]
 atrium-api.workspace = true
 atrium-xrpc-client.workspace = true

@@ -17,7 +17,9 @@ validate them.
 
 - [x] Generate Rust types from JSON Lexicon files and be able to use them in atrium's `com.atproto.repo.*`'s record
   methods easily via CLI
-- [ ] Generate Rust types the same way but in a `build.rs`
+- [x] Generate Rust types the same way but in a `build.rs`
+- [ ] Generate Rust types from a passed in [LexiconDoc](https://github.com/sugyan/atrium/blob/f162f815a04b5ecb0421b390d521c883c41d5f75/lexicon/atrium-lex/src/lib.rs#L16)
+- [ ] Generate Rust types from remote did lexicon schema ATProto records
 - [ ] Custom Lexicon validation of data
 - [ ] Helpers for writing valid DNS TXT records and ATProto records so your Lexicons are public and valid
 - [ ] A way to write Rust types with being descriptive to generate Lexicon files
@@ -40,7 +42,7 @@ Some problems these crates will try to solve
 ## [esquema-cli](./esquema-cli)
 
 A command line tool to help you generate Rust types from lexicon definitions,
-Check [[esquema-example](#esquema-example)] for an example on how to run the command.
+Check [esquema-example](#esquema-example) for an example on how to run the command.
 
 ## [esquema-codegen](./esquema-codegen)
 
@@ -49,20 +51,10 @@ in a way that can be used by other projects like how
 in [atrium-api](https://github.com/sugyan/atrium/tree/main/atrium-api/src) is used for Bluesky's lexicons.
 
 ## [esquema-example](./esquema-example)
+An example project show casing how to use esquema to generate Rust types from ATProto lexicon records via [esquema-cli](./esquema-cli/) or using [esquema-codegen](./esquema-codegen/) to generate the types from a [build.rs](./esquema-example/build.rs) file.
 
-An example project using the Statusphere lexicon with the code generated from `esquema-cli` to create and read records.
-You can generate the Rust types by running `cargo run --bin esquema-cli -- generate` from root, the args are defaulted
-to work for the example project. This will then take the lexicons found
-in [./esquema-example/lexicons](./esquema-example/lexicons) and generate Rust types from them in the
-folder [./esquema-example/src/lexicons](./esquema-example/src/lexicons). Then it's as easy as putting a `mod lexicons;`
-in
-your [main.rs](./esquema-example/src/main.rs). The module name is hard coded at this moment but plans to have it set
-from the folder name you set as output. Try changing the [status.json](./esquema-example/lexicons/status.json) around
-and see it generate new types!
 
-To run the example make sure to copy [.env.template](./esquema-example/.env.template) as `.env` in the location you run
-the example. Then make sure to fill it out. It is recommended to use a Bluesky app password and not your normal password
-for this.
+Check out the [readme](./esquema-example/README.md) for more info.
 
 ## [esquema-validator](./esquema-validator)
 
