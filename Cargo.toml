@@ -15,3 +15,6 @@ atrium-api = "0.25.0"
 atrium-xrpc-client = "0.5.11"
 esquema-codegen = { version = "0.1.0", path = "esquema-codegen" }
 atrium-lex = { git = "https://github.com/sugyan/atrium.git", rev = "f162f815a04b5ecb0421b390d521c883c41d5f75" }
+tokio = { version = "1.44.1", features = ["full"] }
+serde = { version = "1.0.219", features = ["derive"] }
+

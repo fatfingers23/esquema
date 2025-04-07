@@ -27,6 +27,14 @@ pub fn genapi(
     for path in &paths {
         schemas.push(from_reader::<_, LexiconDoc>(File::open(path)?)?);
     }
+    gen_from_lexicon_docs(schemas, outdir)
+}
+
+pub fn gen_from_lexicon_docs(
+    schemas: Vec<LexiconDoc>,
+    outdir: impl AsRef<Path>,
+) -> Result<Vec<impl AsRef<Path>>, Box<dyn Error>> {
+    let outdir = outdir.as_ref().canonicalize()?;
     let mut results = Vec::new();
     //HACK had to change to String instead of &str, but keeping as tuple for now to match atrium-codegen
     let mut namespaces: Vec<(String, Option<&str>)> = Vec::new();

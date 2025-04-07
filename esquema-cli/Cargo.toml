@@ -8,6 +8,11 @@ license.workspace = true
 keywords.workspace = true
 
 [dependencies]
+atrium-api.workspace = true
+atrium-identity = "0.1.1"
+atrium-xrpc-client.workspace = true
 clap = { version = "4.4.18", features = ["derive"] }
 esquema-codegen.workspace = true
+tokio.workspace = true
+serde.workspace = true
 

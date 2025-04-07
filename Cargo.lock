@@ -158,6 +158,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "atrium-identity"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "116fec95d2b8088f3e2c064f38bc5ceb6977ea1ce9e2ffd510d19304ded14b1c"
+dependencies = [
+ "atrium-api",
+ "atrium-common",
+ "atrium-xrpc",
+ "serde",
+ "serde_html_form",
+ "serde_json",
+ "thiserror",
+ "trait-variant",
+]
+
+[[package]]
 name = "atrium-lex"
 version = "0.1.0"
 source = "git+https://github.com/sugyan/atrium.git?rev=f162f815a04b5ecb0421b390d521c883c41d5f75#f162f815a04b5ecb0421b390d521c883c41d5f75"
@@ -533,8 +549,13 @@ dependencies = [
 name = "esquema-cli"
 version = "0.1.0"
 dependencies = [
+ "atrium-api",
+ "atrium-identity",
+ "atrium-xrpc-client",
  "clap",
  "esquema-codegen",
+ "serde",
+ "tokio",
 ]
 
 [[package]]
