@@ -49,10 +49,10 @@ enum GenerateCommands {
 )]
 struct LocalGenerate {
     /// The directory location of your lexicon json files. Works recursively
-    #[arg(short, long, default_value = "./esquema-example/lexicons")]
+    #[arg(short, long)]
     lexdir: PathBuf,
     /// The output directory for the rust files, if not there it will create the folder
-    #[arg(short, long, default_value = "./esquema-example/src/lexicons")]
+    #[arg(short, long, default_value = "./src")]
     outdir: PathBuf,
 }
 
@@ -97,7 +97,7 @@ async fn did_generate_action(args: &DidGenerate) -> Result<(), Box<dyn std::erro
     );
     let parsed_did = AtIdentifierDid(DidType::new(args.did.clone())?);
     //Im not sure atrium can do this? may be a manual thing for now?
-    let identity = IdentityResolver::new()
+    // let identity = IdentityResolver::new()
     // let did_doc = agent.api.com.atproto.identity.
 
     //This endpoint needs your PDS endpoint, for example mine is "https://coral.us-east.host.bsky.network"
