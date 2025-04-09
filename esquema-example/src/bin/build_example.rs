@@ -68,8 +68,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 limit: Some(LimitedNonZeroU8::try_from(3u8)?),
                 repo: atrium_api::types::string::AtIdentifier::Did(session.did.clone()),
                 reverse: None,
-                rkey_end: None,
-                rkey_start: None,
             }
             .into(),
         )

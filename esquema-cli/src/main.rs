@@ -1,12 +1,10 @@
-use atrium_api::agent::atp_agent::AtpAgent;
-use atrium_api::agent::atp_agent::store::MemorySessionStore;
-use atrium_api::agent::bluesky::AtprotoServiceType;
-use atrium_api::did_doc::Service;
-use atrium_api::types::LimitedNonZeroU8;
-use atrium_api::types::string::AtIdentifier::{Did as AtIdentifierDid, Handle};
-use atrium_api::types::string::{AtIdentifier, Did as DidType};
+use anyhow::anyhow;
+use atrium_api::types::string::Nsid;
+use atrium_api::{
+    agent::atp_agent::AtpAgent, agent::atp_agent::store::MemorySessionStore,
+    types::string::AtIdentifier,
+};
 use atrium_common::resolver::Resolver;
-
 use atrium_identity::{
     did::{CommonDidResolver, CommonDidResolverConfig, DEFAULT_PLC_DIRECTORY_URL},
     handle::{AtprotoHandleResolver, AtprotoHandleResolverConfig, DnsTxtResolver},
@@ -16,12 +14,7 @@ use atrium_xrpc_client::reqwest::ReqwestClient;
 use clap::{Parser, Subcommand};
 use esquema_codegen::genapi;
 use hickory_resolver::TokioAsyncResolver;
-use log::info;
-use std::error::Error;
-use std::fs;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -70,13 +63,14 @@ struct LocalGenerate {
     outdir: PathBuf,
 }
 
-fn local_generate_action(args: &LocalGenerate) -> Result<(), Box<dyn std::error::Error>> {
+fn local_generate_action(args: &LocalGenerate) -> anyhow::Result<()> {
     if !args.outdir.exists() {
         fs::create_dir_all(&args.outdir)?;
     }
-    let results = genapi(&args.lexdir, &args.outdir)?;
+    let results = genapi(&args.lexdir, &args.outdir).map_err(|e| anyhow!(e.to_string()))?;
+
     for path in &results {
-        println!(
+        log::info!(
             "{} ({} bytes)",
             path.as_ref().display(),
             fs::metadata(path.as_ref())?.len()
@@ -103,24 +97,25 @@ struct RepoGenerate {
     collection: String,
 }
 
-async fn did_generate_action(args: &RepoGenerate) -> Result<(), Box<dyn std::error::Error>> {
+async fn did_generate_action(args: &RepoGenerate) -> anyhow::Result<()> {
     // Currently just constructing in this command but may move to an app state with DI?
+    // Seems like over kill unless it ends up being used else where
     let http_client = Arc::new(DefaultHttpClient::default());
+    //finds the did document from the users did
     let did_resolver = CommonDidResolver::new(CommonDidResolverConfig {
         plc_directory_url: DEFAULT_PLC_DIRECTORY_URL.to_string(),
         http_client: Arc::clone(&http_client),
     });
 
+    //gets the users did from their handle
     let handle_resolver = AtprotoHandleResolver::new(AtprotoHandleResolverConfig {
         dns_txt_resolver: HickoryDnsTxtResolver::default(),
         http_client: Arc::clone(&http_client),
     });
 
-    let did = handle_resolver
-        .resolve(&atrium_api::types::string::Handle::from_str(
-            args.handle.as_str(),
-        )?)
-        .await?;
+    let handle = atrium_api::types::string::Handle::from_str(args.handle.as_str())
+        .map_err(|e| anyhow!(e.to_string()))?;
+    let did = handle_resolver.resolve(&handle).await?;
 
     let resolved_did = did_resolver.resolve(&did).await?;
     let pds_url = resolved_did
@@ -132,11 +127,10 @@ async fn did_generate_action(args: &RepoGenerate) -> Result<(), Box<dyn std::err
                 .find(|service| service.r#type == "AtprotoPersonalDataServer")
                 .map(|service| service.service_endpoint.clone())
         })
-        .ok_or_else(|| "No valid PDS URL found for this DID")?; // Return error if not found
+        .ok_or_else(|| anyhow!("No valid PDS URL found for this DID"))?;
 
     //This endpoint needs your PDS endpoint, for example mine is "https://coral.us-east.host.bsky.network"
     let agent = AtpAgent::new(ReqwestClient::new(pds_url), MemorySessionStore::default());
-
     let records = agent
         .api
         .com
@@ -144,7 +138,7 @@ async fn did_generate_action(args: &RepoGenerate) -> Result<(), Box<dyn std::err
         .repo
         .list_records(
             atrium_api::com::atproto::repo::list_records::ParametersData {
-                collection: args.collection.parse()?,
+                collection: Nsid::new(args.collection.clone()).map_err(|e| anyhow!(e))?,
                 cursor: None,
                 limit: None,
                 repo: AtIdentifier::Did(did.clone()),
@@ -162,7 +156,7 @@ async fn did_generate_action(args: &RepoGenerate) -> Result<(), Box<dyn std::err
     );
     for ref record in &records.records {
         if record.uri.starts_with(record_uri_prefix.as_str()) {
-            println!("Found it: {:?}", record);
+            log::info!("Found it: {:?}", record);
         }
     }
 
@@ -170,7 +164,9 @@ async fn did_generate_action(args: &RepoGenerate) -> Result<(), Box<dyn std::err
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> anyhow::Result<()> {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
     let cli = Cli::parse();
     match &cli.command {
         Commands::Generate(Generate { subcommand }) => match subcommand {
@@ -197,7 +193,7 @@ impl DnsTxtResolver for HickoryDnsTxtResolver {
     async fn resolve(
         &self,
         query: &str,
-    ) -> core::result::Result<Vec<String>, Box<dyn Error + Send + Sync + 'static>> {
+    ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync + 'static>> {
         Ok(self
             .resolver
             .txt_lookup(query)
