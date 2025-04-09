@@ -165,8 +165,8 @@ async fn did_generate_action(args: &RepoGenerate) -> anyhow::Result<()> {
             log::info!("Found it: {:?}", record);
         }
     }
-
-    gen_from_lexicon_docs(lexicon_docs, PathBuf::from(" ./esquema-example/lexicons/")).unwrap();
+    let out_dir = PathBuf::from("./esquema-example/src/lexicons/");
+    gen_from_lexicon_docs(lexicon_docs, out_dir).unwrap();
 
     Ok(())
 }
