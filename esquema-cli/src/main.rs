@@ -94,6 +94,9 @@ struct RepoGenerate {
     /// Namespace for recursion. Example xyz.statusphere will check for schemas under that collection, but xyz.statusphere.graphs will just check under the .graphs of xyz.statusphere
     #[arg(short, long)]
     namespace: String,
+    /// The output directory for the rust files, if not there it will create the folder
+    #[arg(short, long)]
+    outdir: PathBuf,
     /// The collection that holds the lexicon schema, it is usually 'com.atproto.lexicon.schema'
     #[arg(short, long, default_value = "com.atproto.lexicon.schema")]
     collection: String,
@@ -162,11 +165,21 @@ async fn did_generate_action(args: &RepoGenerate) -> anyhow::Result<()> {
             let doc = LexiconDoc::try_from_unknown(record.data.value.clone()).unwrap();
             lexicon_docs.push(doc);
             // let data: LexiconDoc = record.data.value;
-            log::info!("Found it: {:?}", record);
+            // log::info!("Found it: {:?}", record);
         }
     }
-    let out_dir = PathBuf::from("./esquema-example/src/lexicons/");
-    gen_from_lexicon_docs(lexicon_docs, out_dir).unwrap();
+    if !args.outdir.exists() {
+        fs::create_dir_all(&args.outdir)?;
+    }
+    let out_dir = PathBuf::from(args.outdir.as_path());
+    let results = gen_from_lexicon_docs(lexicon_docs, out_dir).unwrap();
+    for path in &results {
+        log::info!(
+            "{} ({} bytes)",
+            path.as_ref().display(),
+            fs::metadata(path.as_ref())?.len()
+        );
+    }
 
     Ok(())
 }
