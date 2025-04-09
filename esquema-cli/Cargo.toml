@@ -11,6 +11,7 @@ keywords.workspace = true
 anyhow.workspace = true
 atrium-api.workspace = true
 atrium-common.workspace = true
+atrium-lex.workspace = true
 atrium-identity.workspace = true
 atrium-oauth.workspace = true
 atrium-xrpc-client.workspace = true

@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use atrium_api::types::TryFromUnknown;
 use atrium_api::types::string::Nsid;
 use atrium_api::{
     agent::atp_agent::AtpAgent, agent::atp_agent::store::MemorySessionStore,
@@ -9,10 +10,11 @@ use atrium_identity::{
     did::{CommonDidResolver, CommonDidResolverConfig, DEFAULT_PLC_DIRECTORY_URL},
     handle::{AtprotoHandleResolver, AtprotoHandleResolverConfig, DnsTxtResolver},
 };
+use atrium_lex::LexiconDoc;
 use atrium_oauth::DefaultHttpClient;
 use atrium_xrpc_client::reqwest::ReqwestClient;
 use clap::{Parser, Subcommand};
-use esquema_codegen::genapi;
+use esquema_codegen::{gen_from_lexicon_docs, genapi};
 use hickory_resolver::TokioAsyncResolver;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc};
 
@@ -154,11 +156,17 @@ async fn did_generate_action(args: &RepoGenerate) -> anyhow::Result<()> {
         args.collection,
         args.namespace,
     );
+    let mut lexicon_docs: Vec<LexiconDoc> = Vec::new();
     for ref record in &records.records {
         if record.uri.starts_with(record_uri_prefix.as_str()) {
+            let doc = LexiconDoc::try_from_unknown(record.data.value.clone()).unwrap();
+            lexicon_docs.push(doc);
+            // let data: LexiconDoc = record.data.value;
             log::info!("Found it: {:?}", record);
         }
     }
+
+    gen_from_lexicon_docs(lexicon_docs, PathBuf::from(" ./esquema-example/lexicons/")).unwrap();
 
     Ok(())
 }
