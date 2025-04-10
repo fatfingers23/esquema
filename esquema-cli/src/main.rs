@@ -27,7 +27,7 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Generates rust types from your json lexicon files
+    /// Generates rust types from ATProto lexicons
     Generate(Generate),
 }
 
@@ -37,16 +37,16 @@ enum Commands {
     about = "Generates rust types from ATProto lexicons"
 )]
 struct Generate {
-    /// Generates rust types from your local json lexicon files
+    /// Type of lexicon generation
     #[command(subcommand)]
     subcommand: GenerateCommands,
 }
 
 #[derive(Subcommand, Debug)]
 enum GenerateCommands {
-    /// Generates rust types from your local json lexicon files
+    /// Generates rust types from your local JSON lexicon files
     Local(LocalGenerate),
-    /// Generates rust types from a remote pds repository
+    /// Generates rust types from a remote AT Protocol Lexicon schema record
     Remote(RepoGenerate),
 }
 
@@ -56,10 +56,10 @@ enum GenerateCommands {
     about = "Generates Rust types from local Lexicon JSON files"
 )]
 struct LocalGenerate {
-    /// The directory location of your lexicon json files. Works recursively
+    /// The directory location of your lexicon JSON files. Works recursively
     #[arg(short, long)]
     lexdir: PathBuf,
-    /// The output directory for the rust files, if not there it will create the folder
+    /// The output directory for the rust files, if not there, it will create the folder
     #[arg(short, long, default_value = "./src")]
     outdir: PathBuf,
 }
@@ -84,16 +84,18 @@ fn local_generate_action(args: &LocalGenerate) -> anyhow::Result<()> {
 #[derive(Parser, Debug)]
 #[command(
     name = "remote",
-    about = "Generates Rust types from remote Lexicon ATProto records"
+    about = "Generates Rust types from remote Lexicon ATProto Lexicon schema records"
 )]
 struct RepoGenerate {
     /// The owner of the PDS repo
     #[arg(long)]
     handle: String,
-    /// Namespace for recursion. Example xyz.statusphere will check for schemas under that collection, but xyz.statusphere.graphs will just check under the .graphs of xyz.statusphere
+    /// Namespace for recursion.
+    /// Example xyz.statusphere will check for all schemas prefixed with that,
+    /// but xyz.statusphere.graphs will just check under the .graphs of xyz.statusphere
     #[arg(short, long)]
     namespace: String,
-    /// The output directory for the rust files, if not there it will create the folder
+    /// The output directory for the rust files, if not there, it will create the folder
     #[arg(short, long)]
     outdir: PathBuf,
     /// The collection that holds the lexicon schema, it is usually 'com.atproto.lexicon.schema'
@@ -101,7 +103,8 @@ struct RepoGenerate {
     collection: String,
 }
 
-async fn did_generate_action(args: &RepoGenerate) -> anyhow::Result<()> {
+/// Generates local Rust types from AT Protocol lexicon schema records
+async fn generate_from_record_action(args: &RepoGenerate) -> anyhow::Result<()> {
     // Currently just constructing in this command but may move to an app state with DI?
     // Seems like over kill unless it ends up being used else where
     let http_client = Arc::new(DefaultHttpClient::default());
@@ -205,7 +208,7 @@ async fn main() -> anyhow::Result<()> {
     match &cli.command {
         Commands::Generate(Generate { subcommand }) => match subcommand {
             GenerateCommands::Local(args) => local_generate_action(args),
-            GenerateCommands::Remote(args) => did_generate_action(args).await,
+            GenerateCommands::Remote(args) => generate_from_record_action(args).await,
         },
     }
 }
