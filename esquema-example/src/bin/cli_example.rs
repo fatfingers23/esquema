@@ -17,7 +17,7 @@ use esquema_example::lexicons::{
 
 /// This example shows how you can generate rust types from the lexicon schema files via the cli
 /// This process is manual and you can place the generated types in your source code.
-/// cargo run --bin esquema-cli -- generate from root will generate the types in the src/lexicons
+///  cargo run --bin esquema-cli -- generate local --lexdir ./esquema-example/lexicons/ --outdir ./esquema-example/src/lexicons/ from root will generate the types in the src/lexicons
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
@@ -69,8 +69,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 limit: Some(LimitedNonZeroU8::try_from(3u8)?),
                 repo: atrium_api::types::string::AtIdentifier::Did(session.did.clone()),
                 reverse: None,
-                rkey_end: None,
-                rkey_start: None,
             }
             .into(),
         )

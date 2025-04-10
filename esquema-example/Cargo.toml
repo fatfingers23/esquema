@@ -12,8 +12,9 @@ keywords.workspace = true
 atrium-api.workspace = true
 atrium-xrpc-client.workspace = true
 dotenv = "0.15.0"
-tokio = { version = "1.44.1", features = ["full"] }
-serde = { version = "1.0.219", features = ["derive"] }
+tokio.workspace = true
+serde.workspace = true
 
 [build-dependencies]
-esquema-codegen.workspace = true
+esquema-codegen = { git = "https://github.com/fatfingers23/esquema.git", branch = "main" }
+#esquema-codegen.workspace = true

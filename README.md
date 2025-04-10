@@ -12,18 +12,20 @@ generation and parsing of the JSON Lexicon records are thanks to that project an
 
 # End Goal
 
-You should be able to easily use strong Rust types from ATProto lexicon schemas to build out your Rust project that uses ATProto records.
+You should be able to easily use strong Rust types from ATProto lexicon schemas to build out your Rust project that uses
+ATProto records.
 
-You should be able to validate those records structure and content against that schema. If your app depends on a field being there or being a certain length you should be able to easily check that with out manually doing it.
-
+You should be able to validate those records structure and content against that schema. If your app depends on a field
+being there or being a certain length you should be able to easily check that with out manually doing it.
 
 # Todo list
 
 - [x] Generate Rust types from JSON Lexicon files and be able to use them in atrium's `com.atproto.repo.*`'s record
   methods easily via CLI
 - [x] Generate Rust types the same way but in a `build.rs`
-- [ ] Generate Rust types from a passed in [LexiconDoc](https://github.com/sugyan/atrium/blob/f162f815a04b5ecb0421b390d521c883c41d5f75/lexicon/atrium-lex/src/lib.rs#L16)
-- [ ] Generate Rust types from remote did lexicon schema ATProto records
+- [x] Generate Rust types from a passed
+  in [LexiconDoc](https://github.com/sugyan/atrium/blob/f162f815a04b5ecb0421b390d521c883c41d5f75/lexicon/atrium-lex/src/lib.rs#L16)
+- [x] Generate Rust types from remote did lexicon schema ATProto records
 - [ ] Custom Lexicon validation of data
 - [ ] Helpers for writing valid DNS TXT records and ATProto records so your Lexicons are public and valid
 - [ ] A way to write Rust types with being descriptive to generate Lexicon files
@@ -43,10 +45,40 @@ Some problems these crates will try to solve
 - It does not appear Bluesky currently support custom lexicon scheme resolution and validation so to give you the tools
   in Rust to know if the record is valid according to the schema.
 
+# Installing
+
+Currently, [esquema-cli](./esquema-cli) and [esquema-codegen](./esquema-codegen) are not on crates.io.
+The plan is once
+milestone [1. Code Generation](https://github.com/fatfingers23/esquema/milestone/1)
+is completed to publish. Till then if you want to get in on the fun, can use the following.
+
+### Installing the cli
+
+`cargo install esquema-cli --locked --git https://github.com/fatfingers23/esquema.git`
+
+### Adding to cargo for build.rs
+
+ ```toml
+# You can keep it in your build-dependecies
+[build-dependencies]
+esquema-codegen = { git = "https://github.com/fatfingers23/esquema.git", branch = "main" }
+
+```
+
+For usage check the [esquema-cli](#esquema-cli) section or the [esquema-cli project](./esquema-example)
+
 ## [esquema-cli](./esquema-cli)
 
 A command line tool to help you generate Rust types from lexicon definitions,
-Check [esquema-example](#esquema-example) for an example on how to run the command.
+Check [esquema-example](#esquema-example) for an example on how to run the command in a projects setting.
+
+Some examples:
+
+create types from local lexicon schema JSON files
+`esquema-cli generate local --lexdir ./esquema-example/lexicons/ --outdir ./esquema-example/src/lexicons/`
+
+Create types from a remote ATProtocol record with a lexicon schema. Using statusphere as the example
+`esquema-cli generate remote --handle statusphere.xyz --namespace xyz --outdir ./esquema-example/src/lexicons`
 
 ## [esquema-codegen](./esquema-codegen)
 
@@ -55,8 +87,10 @@ in a way that can be used by other projects like how
 in [atrium-api](https://github.com/sugyan/atrium/tree/main/atrium-api/src) is used for Bluesky's lexicons.
 
 ## [esquema-example](./esquema-example)
-An example project show casing how to use esquema to generate Rust types from ATProto lexicon records via [esquema-cli](./esquema-cli/) or using [esquema-codegen](./esquema-codegen/) to generate the types from a [build.rs](./esquema-example/build.rs) file.
 
+An example project show casing how to use esquema to generate Rust types from ATProto lexicon records
+via [esquema-cli](./esquema-cli/) or using [esquema-codegen](./esquema-codegen/) to generate the types from
+a [build.rs](./esquema-example/build.rs) file.
 
 Check out the [readme](./esquema-example/README.md) for more info.
 
