@@ -45,6 +45,28 @@ Some problems these crates will try to solve
 - It does not appear Bluesky currently support custom lexicon scheme resolution and validation so to give you the tools
   in Rust to know if the record is valid according to the schema.
 
+# Installing
+
+Currently, [esquema-cli](./esquema-cli) and [esquema-codegen](./esquema-codegen) are not on crates.io.
+The plan is once
+milestone [1. Code Generation](https://github.com/fatfingers23/esquema/milestone/1)
+is completed to publish. Till then if you want to get in on the fun, can use the following.
+
+### Installing the cli
+
+`cargo install esquema-cli --locked --git https://github.com/fatfingers23/esquema.git`
+
+### Adding to cargo for build.rs
+
+ ```toml
+# You can keep it in your build-dependecies
+[build-dependencies]
+esquema-codegen = { git = "https://github.com/fatfingers23/esquema.git", branch = "main" }
+
+```
+
+For usage check the [esquema-cli](#esquema-cli) section or the [esquema-cli project](./esquema-example)
+
 ## [esquema-cli](./esquema-cli)
 
 A command line tool to help you generate Rust types from lexicon definitions,

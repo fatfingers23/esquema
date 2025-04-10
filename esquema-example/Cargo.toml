@@ -16,4 +16,5 @@ tokio.workspace = true
 serde.workspace = true
 
 [build-dependencies]
-esquema-codegen.workspace = true
+esquema-codegen = { git = "https://github.com/fatfingers23/esquema.git", branch = "main" }
+#esquema-codegen.workspace = true

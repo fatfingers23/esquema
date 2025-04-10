@@ -750,7 +750,7 @@ dependencies = [
  "atrium-xrpc-client",
  "clap",
  "env_logger",
- "esquema-codegen",
+ "esquema-codegen 0.1.0",
  "hickory-resolver",
  "log",
  "serde_json",
@@ -773,13 +773,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "esquema-codegen"
+version = "0.1.0"
+source = "git+https://github.com/fatfingers23/esquema.git?branch=main#dbd144df1f9ed85475a86bd65b7e721def3f3edd"
+dependencies = [
+ "atrium-lex",
+ "heck 0.4.1",
+ "itertools",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "serde_with",
+ "syn",
+]
+
+[[package]]
 name = "esquema-example"
 version = "0.1.0"
 dependencies = [
  "atrium-api",
  "atrium-xrpc-client",
  "dotenv",
- "esquema-codegen",
+ "esquema-codegen 0.1.0 (git+https://github.com/fatfingers23/esquema.git?branch=main)",
  "serde",
  "tokio",
 ]
