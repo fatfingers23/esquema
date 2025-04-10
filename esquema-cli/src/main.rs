@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use atrium_api::types::TryFromUnknown;
 use atrium_api::types::string::Nsid;
 use atrium_api::{
     agent::atp_agent::AtpAgent, agent::atp_agent::store::MemorySessionStore,
@@ -162,17 +161,31 @@ async fn did_generate_action(args: &RepoGenerate) -> anyhow::Result<()> {
     let mut lexicon_docs: Vec<LexiconDoc> = Vec::new();
     for ref record in &records.records {
         if record.uri.starts_with(record_uri_prefix.as_str()) {
-            let doc = LexiconDoc::try_from_unknown(record.data.value.clone()).unwrap();
-            lexicon_docs.push(doc);
-            // let data: LexiconDoc = record.data.value;
-            // log::info!("Found it: {:?}", record);
+            //HACK (slightly)
+            //We are using serde_json directly instead of the below because it currently uses .unwrap
+            //and we want a friendlier error
+            // let doc_result = LexiconDoc::try_from_unknown(record.data.value.clone());
+            let json = serde_json::to_vec(&record.data.value)?;
+            match serde_json::from_slice::<LexiconDoc>(&json) {
+                Ok(doc) => {
+                    lexicon_docs.push(doc);
+                }
+                Err(err) => {
+                    log::debug!("{:?}", err);
+                    log::error!(
+                        "There was an error in deserializing the ATProto record found {}. Is it a valid lexicon schema record?",
+                        record.uri
+                    );
+                }
+            }
         }
     }
     if !args.outdir.exists() {
         fs::create_dir_all(&args.outdir)?;
     }
     let out_dir = PathBuf::from(args.outdir.as_path());
-    let results = gen_from_lexicon_docs(lexicon_docs, out_dir).unwrap();
+    let results =
+        gen_from_lexicon_docs(lexicon_docs, out_dir).map_err(|e| anyhow!(e.to_string()))?;
     for path in &results {
         log::info!(
             "{} ({} bytes)",

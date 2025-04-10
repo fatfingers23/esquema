@@ -753,6 +753,7 @@ dependencies = [
  "esquema-codegen",
  "hickory-resolver",
  "log",
+ "serde_json",
  "tokio",
 ]
 
@@ -768,8 +769,6 @@ dependencies = [
  "quote",
  "serde",
  "serde_json",
- "serde_repr",
- "serde_with",
  "syn",
 ]
 

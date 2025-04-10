@@ -13,8 +13,6 @@ atrium-lex.workspace = true
 # Serde
 serde = "1.0.160"
 serde_json = "1.0.96"
-serde_repr = "0.1.12"
-serde_with = "2.3.2"
 
 # Proc macros
 heck = "0.4.1"

@@ -21,3 +21,4 @@ tokio.workspace = true
 log.workspace = true
 env_logger.workspace = true
 hickory-resolver = "0.24.1"
+serde_json.workspace = true
