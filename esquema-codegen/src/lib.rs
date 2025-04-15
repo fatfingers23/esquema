@@ -76,7 +76,12 @@ pub fn gen_from_lexicon_docs(
         namespaces.push((namespace, None));
     }
 
-    results.push(generate_records(&outdir, &schemas, &namespaces)?);
+    results.push(generate_records(
+        &outdir,
+        &schemas,
+        &namespaces,
+        &module_name,
+    )?);
     results.push(generate_lexicons_mod_or_lib(
         &outdir,
         &namespaces,

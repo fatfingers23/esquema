@@ -55,7 +55,16 @@ pub fn collection(name: &str, nsid: &str) -> TokenStream {
 
 fn lex_record(record: &LexRecord) -> Result<TokenStream> {
     let LexRecordRecord::Object(object) = &record.record;
-    lex_object(object, "Record")
+    let result = lex_object(object, "Record")?;
+    Ok(quote! {
+        #result
+
+        impl From<atrium_api::types::Unknown> for RecordData {
+            fn from(value: atrium_api::types::Unknown) -> Self {
+                Self::try_from_unknown(value).unwrap()
+            }
+        }
+    })
 }
 
 fn xrpc_parameters(parameters: &LexXrpcParameters) -> Result<TokenStream> {
@@ -281,7 +290,6 @@ fn lex_object(object: &LexObject, name: &str) -> Result<TokenStream> {
         )?);
     }
     Ok(quote! {
-        use atrium_api::types::TryFromUnknown;
 
         #description
         #derives
@@ -292,12 +300,6 @@ fn lex_object(object: &LexObject, name: &str) -> Result<TokenStream> {
 
         pub type #object_name = atrium_api::types::Object<#struct_name>;
 
-        impl From<atrium_api::types::Unknown> for RecordData {
-            fn from(value: atrium_api::types::Unknown) -> Self {
-                //TODO handle unwrap
-                Self::try_from_unknown(value).unwrap()
-            }
-        }
     })
 }
 
@@ -374,7 +376,7 @@ fn lex_string(string: &LexString, name: &str) -> Result<TokenStream> {
 
 fn ref_type(r#ref: &LexRef) -> Result<(TokenStream, TokenStream)> {
     let description = description(&r#ref.description);
-    Ok((description, resolve_path(&r#ref.r#ref, "main")?))
+    Ok((description, resolve_path(&r#ref.r#ref, "main", &None)?))
 }
 
 fn union_type(union: &LexRefUnion, enum_name: &str) -> Result<(TokenStream, TokenStream)> {
@@ -599,7 +601,7 @@ pub fn enum_common(
     let enum_name = format_ident!("{name}");
     let mut variants = Vec::new();
     for r#ref in refs {
-        let path = resolve_path(r#ref, if is_record { "record" } else { "main" })?;
+        let path = resolve_path(r#ref, if is_record { "record" } else { "main" }, &None)?;
         let rename = if r#ref.starts_with('#') {
             format!(
                 "{}{}",
@@ -650,11 +652,12 @@ pub fn enum_common(
 pub fn impl_into_record(
     refs: &[String],
     namespaces: &[(String, Option<&str>)],
+    module_name: &Option<String>,
 ) -> Result<TokenStream> {
     let mut impls = Vec::new();
     for r#ref in refs {
-        let record_path = resolve_path(r#ref, "record")?;
-        let record_data_path = resolve_path(r#ref, "record_data")?;
+        let record_path = resolve_path(r#ref, "record", module_name)?;
+        let record_data_path = resolve_path(r#ref, "record_data", module_name)?;
         let s = record_path.to_string().replace(' ', "");
         let mut parts = s
             .strip_prefix("crate::")
@@ -686,12 +689,6 @@ pub fn impl_into_record(
             impl From<#record_data_path> for KnownRecord {
                 fn from(record_data: #record_data_path) -> Self {
                     KnownRecord::#name(Box::new(record_data.into()))
-                }
-            }
-
-            impl Into<atrium_api::types::Unknown> for KnownRecord {
-                fn into(self) -> atrium_api::types::Unknown {
-                    atrium_api::types::TryIntoUnknown::try_into_unknown(&self).unwrap()
                 }
             }
         });
@@ -767,13 +764,22 @@ fn derives() -> Result<TokenStream> {
     Ok(quote!(#[derive(#(#derives),*)]))
 }
 
-fn resolve_path(r#ref: &str, default: &str) -> Result<TokenStream> {
+fn resolve_path(r#ref: &str, default: &str, module_name: &Option<String>) -> Result<TokenStream> {
     let (namespace, def) = r#ref.split_once('#').unwrap_or((r#ref, default));
     let path = syn::parse_str::<Path>(&if namespace.is_empty() {
         def.to_pascal_case()
     } else {
+        //TODO here
+        let name_space_prefix = match module_name {
+            None => String::from("crate"),
+            Some(module_name) => {
+                format!("crate::{}", module_name)
+            }
+        };
+
         format!(
-            "crate::lexicons::{}::{}",
+            "{}::{}::{}",
+            name_space_prefix,
             namespace.split('.').map(str::to_snake_case).join("::"),
             if def.chars().all(char::is_uppercase) {
                 def.to_string()
