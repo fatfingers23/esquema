@@ -7,7 +7,8 @@ mod schema;
 mod token_stream;
 
 use crate::generator::{
-    generate_lexicons_mod_or_lib, generate_modules, generate_records, generate_schemas,
+    generate_client, generate_lexicons_mod_or_lib, generate_modules, generate_records,
+    generate_schemas,
 };
 use atrium_lex::LexiconDoc;
 use serde_json::from_reader;
@@ -82,6 +83,8 @@ pub fn gen_from_lexicon_docs(
         &namespaces,
         &module_name,
     )?);
+    results.push(generate_client(&outdir, &schemas, &namespaces)?);
+
     results.push(generate_lexicons_mod_or_lib(
         &outdir,
         &namespaces,
