@@ -110,12 +110,17 @@ pub(crate) fn generate_records(
     Ok(path)
 }
 
-pub(crate) fn generate_lexicons_mod(
+pub(crate) fn generate_lexicons_mod_or_lib(
     outdir: &Path,
     namespaces: &[(String, Option<&str>)],
+    lib: bool,
 ) -> Result<PathBuf, Box<dyn Error>> {
     let module = lexicon_module(namespaces)?;
-    let path = outdir.join("mod.rs");
+    let path = if lib {
+        outdir.join("lib.rs")
+    } else {
+        outdir.join("mod.rs")
+    };
     write_to_file(File::create(&path)?, module)?;
 
     Ok(path)
