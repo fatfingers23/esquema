@@ -594,7 +594,7 @@ fn description(description: &Option<String>) -> TokenStream {
 }
 
 fn refs_enum(refs: &[String], name: &str, schema_id: Option<&str>) -> Result<TokenStream> {
-    enum_common(refs, name, schema_id, &[])
+    enum_common(refs, name, schema_id, &[], &None)
 }
 
 pub fn enum_common(
@@ -602,13 +602,18 @@ pub fn enum_common(
     name: &str,
     schema_id: Option<&str>,
     namespaces: &[(String, Option<&str>)],
+    module_name: &Option<String>,
 ) -> Result<TokenStream> {
     let is_record = schema_id.is_none();
     let derives = derives()?;
     let enum_name = format_ident!("{name}");
     let mut variants = Vec::new();
     for r#ref in refs {
-        let path = resolve_path(r#ref, if is_record { "record" } else { "main" }, &None)?;
+        let path = resolve_path(
+            r#ref,
+            if is_record { "record" } else { "main" },
+            &module_name,
+        )?;
         let rename = if r#ref.starts_with('#') {
             format!(
                 "{}{}",
@@ -663,7 +668,7 @@ pub fn impl_into_record(
 ) -> Result<TokenStream> {
     let mut impls = Vec::new();
     for r#ref in refs {
-        let record_path = resolve_path(r#ref, "record", module_name)?;
+        let record_path = resolve_path(r#ref, "record", &module_name)?;
         let record_data_path = resolve_path(r#ref, "record_data", module_name)?;
         let s = record_path.to_string().replace(' ', "");
         let mut parts = s
@@ -734,7 +739,7 @@ pub fn modules(
 
 pub fn lexicon_module(
     namespaces: &[(String, Option<&str>)],
-    outdir: &std::path::Path,
+    generate_client: bool,
 ) -> Result<TokenStream> {
     let v = namespaces
         .iter()
@@ -751,23 +756,20 @@ pub fn lexicon_module(
             .into()
         })
         .collect_vec();
-    let top = quote! {
-        pub mod record;
-    };
-    //HACK looks like in atrium it is just assumed you already have a lib.rs, but since we are making it or the module
-    //We are just checking if these exist before adding
-    let mut extras: Vec<TokenStream> = vec![];
-    let client_check_dir = outdir.join("client.rs");
-    if client_check_dir.exists() {
-        extras.push(quote! {
+    let top = if generate_client {
+        quote! {
+            pub mod record;
             pub mod client;
-        })
-    }
+        }
+    } else {
+        quote! {
+            pub mod record;
+        }
+    };
 
     Ok(quote!(
         #top
         #(#v)*
-        #(#extras)*
     ))
 }
 

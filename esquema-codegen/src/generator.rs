@@ -117,7 +117,7 @@ pub(crate) fn generate_records(
         })
         .sorted()
         .collect_vec();
-    let known_record = enum_common(&records, "KnownRecord", None, namespaces)?;
+    let known_record = enum_common(&records, "KnownRecord", None, namespaces, module_name)?;
     let impl_into = impl_into_record(&records, namespaces, &module_name)?;
     let content = quote! {
         #![doc = "A collection of known record types."]
@@ -175,8 +175,9 @@ pub(crate) fn generate_lexicons_mod_or_lib(
     outdir: &Path,
     namespaces: &[(String, Option<&str>)],
     lib: bool,
+    generate_client: bool,
 ) -> Result<PathBuf, Box<dyn Error>> {
-    let module = lexicon_module(namespaces, &outdir)?;
+    let module = lexicon_module(namespaces, generate_client)?;
     let path = if lib {
         outdir.join("lib.rs")
     } else {

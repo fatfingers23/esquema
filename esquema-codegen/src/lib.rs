@@ -11,6 +11,7 @@ use crate::generator::{
     generate_schemas,
 };
 use atrium_lex::LexiconDoc;
+use atrium_lex::lexicon::LexUserType;
 use serde_json::from_reader;
 use std::error::Error;
 use std::fs::File;
@@ -64,8 +65,22 @@ pub fn gen_from_lexicon_docs(
     //HACK had to change to String instead of &str, but keeping as tuple for now to match atrium-codegen
     let mut namespaces: Vec<(String, Option<&str>)> = Vec::new();
 
+    let mut client_doc_found = false;
     //HACK not sure if I need that clone
     for doc in schemas.clone() {
+        if !client_doc_found {
+            //HACK another clone i feel like I can skip on
+            for def in doc.defs.clone() {
+                if matches!(
+                    def.1,
+                    LexUserType::XrpcQuery(_)
+                        | LexUserType::XrpcProcedure(_)
+                        | LexUserType::XrpcSubscription(_)
+                ) {
+                    client_doc_found = true;
+                }
+            }
+        }
         results.extend(generate_schemas(&doc.clone(), &outdir)?);
         //TODO do proper error handling
         let parts: Vec<&str> = doc.id.split('.').collect();
@@ -83,12 +98,15 @@ pub fn gen_from_lexicon_docs(
         &namespaces,
         &module_name,
     )?);
-    results.push(generate_client(&outdir, &schemas, &namespaces)?);
+    if client_doc_found {
+        results.push(generate_client(&outdir, &schemas, &namespaces)?);
+    }
 
     results.push(generate_lexicons_mod_or_lib(
         &outdir,
         &namespaces,
         module_name.is_none(),
+        client_doc_found,
     )?);
     results.extend(generate_modules(&outdir, &schemas, &namespaces)?);
 
