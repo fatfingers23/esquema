@@ -757,20 +757,6 @@ pub fn lexicon_module(
     //HACK looks like in atrium it is just assumed you already have a lib.rs, but since we are making it or the module
     //We are just checking if these exist before adding
     let mut extras: Vec<TokenStream> = vec![];
-    let error_check_dir = outdir.join("error.rs");
-    if error_check_dir.exists() {
-        extras.push(quote! {
-            pub mod error;
-        })
-    }
-
-    let types_check_dir = outdir.join("types.rs");
-    if types_check_dir.exists() {
-        extras.push(quote! {
-            pub mod types;
-        })
-    }
-
     let client_check_dir = outdir.join("client.rs");
     if client_check_dir.exists() {
         extras.push(quote! {
