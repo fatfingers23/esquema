@@ -75,10 +75,10 @@ Check [esquema-example](#esquema-example) for an example on how to run the comma
 Some examples:
 
 create types from local lexicon schema JSON files
-`esquema-cli generate local --lexdir ./esquema-example/lexicons/ --outdir ./esquema-example/src/lexicons/`
+`esquema-cli generate local --lexdir ./esquema-example/lexicons/ --outdir ./esquema-example/src/ --modules lexicons`
 
 Create types from a remote ATProtocol record with a lexicon schema. Using statusphere as the example
-`esquema-cli generate remote --handle statusphere.xyz --namespace xyz --outdir ./esquema-example/src/lexicons`
+`esquema-cli generate remote --handle statusphere.xyz --namespace xyz --outdir ./esquema-example/src/ --modules lexicons`
 
 ## [esquema-codegen](./esquema-codegen)
 

@@ -4,7 +4,8 @@
 use crate::fs::find_dirs;
 use crate::schema::find_ref_unions;
 use crate::token_stream::{
-    collection, enum_common, impl_into_record, lexicon_module, modules, ref_unions, user_type,
+    client, collection, enum_common, impl_into_record, lexicon_module, modules, ref_unions,
+    user_type,
 };
 use atrium_lex::LexiconDoc;
 use atrium_lex::lexicon::LexUserType;
@@ -12,6 +13,7 @@ use heck::ToSnakeCase;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fs::{File, create_dir_all, read_dir};
 use std::io::Write;
@@ -28,6 +30,7 @@ pub(crate) fn generate_schemas(
     if let Some(basename) = paths.pop() {
         let mut tokens = Vec::new();
         let mut names = Vec::new();
+        let mut needs_try_from_unknown = false;
         for (name, def) in &schema.defs {
             // NSID (for XRPC Query, Procedure, Subscription)
             if matches!(
@@ -41,6 +44,10 @@ pub(crate) fn generate_schemas(
                     pub const NSID: &str = #nsid;
                 });
             }
+            if matches!(def, LexUserType::Record(_)) {
+                needs_try_from_unknown = true;
+            }
+
             // main def
             if name == "main" {
                 tokens.push(user_type(def, &schema.id, basename, true)?);
@@ -67,10 +74,21 @@ pub(crate) fn generate_schemas(
                 #description
             }
         };
-        let content = quote! {
-            #documentation
-            #(#tokens)*
+
+        let content = if needs_try_from_unknown {
+            quote! {
+                #documentation
+                use atrium_api::types::TryFromUnknown;
+
+                #(#tokens)*
+            }
+        } else {
+            quote! {
+                #documentation
+                #(#tokens)*
+            }
         };
+
         let dir = outdir.join(paths.join("/"));
         create_dir_all(&dir)?;
         let mut filename = PathBuf::from(basename.to_snake_case());
@@ -86,6 +104,7 @@ pub(crate) fn generate_records(
     outdir: &Path,
     schemas: &[LexiconDoc],
     namespaces: &[(String, Option<&str>)],
+    module_name: &Option<String>,
 ) -> Result<PathBuf, Box<dyn Error>> {
     let records = schemas
         .iter()
@@ -98,24 +117,72 @@ pub(crate) fn generate_records(
         })
         .sorted()
         .collect_vec();
-    let known_record = enum_common(&records, "KnownRecord", None, namespaces)?;
-    let impl_into = impl_into_record(&records, namespaces)?;
+    let known_record = enum_common(&records, "KnownRecord", None, namespaces, module_name)?;
+    let impl_into = impl_into_record(&records, namespaces, &module_name)?;
     let content = quote! {
         #![doc = "A collection of known record types."]
         #known_record
         #impl_into
+
+        impl Into<atrium_api::types::Unknown> for KnownRecord {
+            fn into(self) -> atrium_api::types::Unknown {
+                atrium_api::types::TryIntoUnknown::try_into_unknown(&self).unwrap()
+            }
+        }
     };
     let path = outdir.join("record.rs");
     write_to_file(File::create(&path)?, content)?;
     Ok(path)
 }
 
-pub(crate) fn generate_lexicons_mod(
+pub(crate) fn generate_client(
     outdir: &Path,
+    schemas: &[LexiconDoc],
     namespaces: &[(String, Option<&str>)],
 ) -> Result<PathBuf, Box<dyn Error>> {
-    let module = lexicon_module(namespaces)?;
-    let path = outdir.join("mod.rs");
+    let mut schema_map = HashMap::new();
+    let mut tree = HashMap::new();
+    for schema in schemas {
+        if let Some(def) = schema.defs.get("main") {
+            if matches!(
+                def,
+                LexUserType::XrpcQuery(_) | LexUserType::XrpcProcedure(_)
+            ) {
+                schema_map.insert(schema.id.clone(), def);
+                let mut parts = schema.id.split('.').collect_vec();
+                let mut is_leaf = true;
+                while let Some(part) = parts.pop() {
+                    let key = parts.join(".");
+                    tree.entry(key)
+                        .or_insert_with(HashSet::new)
+                        .insert((part, is_leaf));
+                    is_leaf = false;
+                }
+            }
+        }
+    }
+    let tokens = client(&tree, &schema_map, namespaces)?;
+    let content = quote! {
+        #![doc = r#"Structs for ATP client, implements all HTTP APIs of XRPC."#]
+        #tokens
+    };
+    let path = outdir.join("client.rs");
+    write_to_file(File::create(&path)?, content)?;
+    Ok(path)
+}
+
+pub(crate) fn generate_lexicons_mod_or_lib(
+    outdir: &Path,
+    namespaces: &[(String, Option<&str>)],
+    lib: bool,
+    generate_client: bool,
+) -> Result<PathBuf, Box<dyn Error>> {
+    let module = lexicon_module(namespaces, generate_client)?;
+    let path = if lib {
+        outdir.join("lib.rs")
+    } else {
+        outdir.join("mod.rs")
+    };
     write_to_file(File::create(&path)?, module)?;
 
     Ok(path)

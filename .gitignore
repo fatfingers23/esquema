@@ -1,4 +1,4 @@
 **/target
 **/.env
 .idea
-./esquema-cli/examples/lexicons
+./esquema-cli/examples

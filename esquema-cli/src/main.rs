@@ -60,15 +60,16 @@ struct LocalGenerate {
     #[arg(short, long)]
     lexdir: PathBuf,
     /// The output directory for the rust files, if not there, it will create the folder
-    #[arg(short, long, default_value = "./src")]
+    #[arg(short, long)]
     outdir: PathBuf,
+    /// If set, the output is a module instead of a library
+    #[arg(short, long)]
+    module: Option<String>,
 }
 
 fn local_generate_action(args: &LocalGenerate) -> anyhow::Result<()> {
-    if !args.outdir.exists() {
-        fs::create_dir_all(&args.outdir)?;
-    }
-    let results = genapi(&args.lexdir, &args.outdir).map_err(|e| anyhow!(e.to_string()))?;
+    let results =
+        genapi(&args.lexdir, &args.outdir, &args.module).map_err(|e| anyhow!(e.to_string()))?;
 
     for path in &results {
         log::info!(
@@ -101,6 +102,9 @@ struct RepoGenerate {
     /// The collection that holds the lexicon schema, it is usually 'com.atproto.lexicon.schema'
     #[arg(short, long, default_value = "com.atproto.lexicon.schema")]
     collection: String,
+    /// If set, the output is a module instead of a library
+    #[arg(short, long)]
+    module: Option<String>,
 }
 
 /// Generates local Rust types from AT Protocol lexicon schema records
@@ -183,12 +187,10 @@ async fn generate_from_record_action(args: &RepoGenerate) -> anyhow::Result<()> 
             }
         }
     }
-    if !args.outdir.exists() {
-        fs::create_dir_all(&args.outdir)?;
-    }
+
     let out_dir = PathBuf::from(args.outdir.as_path());
-    let results =
-        gen_from_lexicon_docs(lexicon_docs, out_dir).map_err(|e| anyhow!(e.to_string()))?;
+    let results = gen_from_lexicon_docs(lexicon_docs, out_dir, &args.module)
+        .map_err(|e| anyhow!(e.to_string()))?;
     for path in &results {
         log::info!(
             "{} ({} bytes)",
