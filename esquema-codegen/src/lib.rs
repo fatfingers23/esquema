@@ -81,7 +81,7 @@ pub fn gen_from_lexicon_docs(
                 }
             }
         }
-        results.extend(generate_schemas(&doc.clone(), &outdir)?);
+        results.extend(generate_schemas(&doc.clone(), &outdir, module_name)?);
         //TODO do proper error handling
         let parts: Vec<&str> = doc.id.split('.').collect();
         let namespace = format!("{}.{}", parts[0], parts[1]);
@@ -96,10 +96,15 @@ pub fn gen_from_lexicon_docs(
         &outdir,
         &schemas,
         &namespaces,
-        &module_name,
+        module_name,
     )?);
     if client_doc_found {
-        results.push(generate_client(&outdir, &schemas, &namespaces)?);
+        results.push(generate_client(
+            &outdir,
+            &schemas,
+            &namespaces,
+            module_name,
+        )?);
     }
 
     results.push(generate_lexicons_mod_or_lib(
