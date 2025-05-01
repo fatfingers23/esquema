@@ -21,15 +21,18 @@ pub fn user_type(
     schema_id: &str,
     name: &str,
     is_main: bool,
+    module_name: &Option<String>,
 ) -> Result<TokenStream> {
     let user_type = match def {
-        LexUserType::Record(record) => lex_record(record)?,
-        LexUserType::XrpcQuery(query) => lex_query(query)?,
-        LexUserType::XrpcProcedure(procedure) => lex_procedure(procedure)?,
-        LexUserType::XrpcSubscription(subscription) => lex_subscription(subscription)?,
-        LexUserType::Array(array) => lex_array(array, name)?,
+        LexUserType::Record(record) => lex_record(record, module_name)?,
+        LexUserType::XrpcQuery(query) => lex_query(query, module_name)?,
+        LexUserType::XrpcProcedure(procedure) => lex_procedure(procedure, module_name)?,
+        LexUserType::XrpcSubscription(subscription) => lex_subscription(subscription, module_name)?,
+        LexUserType::Array(array) => lex_array(array, name, module_name)?,
         LexUserType::Token(token) => lex_token(token, name, schema_id)?,
-        LexUserType::Object(object) => lex_object(object, if is_main { "Main" } else { name })?,
+        LexUserType::Object(object) => {
+            lex_object(object, if is_main { "Main" } else { name }, module_name)?
+        }
         LexUserType::String(string) => lex_string(string, name)?,
         _ => unimplemented!("{def:?}"),
     };
@@ -39,10 +42,19 @@ pub fn user_type(
     })
 }
 
-pub fn ref_unions(schema_id: &str, ref_unions: &[(String, LexRefUnion)]) -> Result<TokenStream> {
+pub fn ref_unions(
+    schema_id: &str,
+    ref_unions: &[(String, LexRefUnion)],
+    module_name: &Option<String>,
+) -> Result<TokenStream> {
     let mut enums = Vec::new();
     for (name, ref_union) in ref_unions {
-        enums.push(refs_enum(&ref_union.refs, name, Some(schema_id))?);
+        enums.push(refs_enum(
+            &ref_union.refs,
+            name,
+            Some(schema_id),
+            module_name,
+        )?);
     }
     Ok(quote!(#(#enums)*))
 }
@@ -60,9 +72,9 @@ pub fn collection(name: &str, nsid: &str) -> TokenStream {
     }
 }
 
-fn lex_record(record: &LexRecord) -> Result<TokenStream> {
+fn lex_record(record: &LexRecord, module_name: &Option<String>) -> Result<TokenStream> {
     let LexRecordRecord::Object(object) = &record.record;
-    let result = lex_object(object, "Record")?;
+    let result = lex_object(object, "Record", module_name)?;
     Ok(quote! {
         #result
 
@@ -74,7 +86,10 @@ fn lex_record(record: &LexRecord) -> Result<TokenStream> {
     })
 }
 
-fn xrpc_parameters(parameters: &LexXrpcParameters) -> Result<TokenStream> {
+fn xrpc_parameters(
+    parameters: &LexXrpcParameters,
+    module_name: &Option<String>,
+) -> Result<TokenStream> {
     let properties = parameters
         .properties
         .iter()
@@ -117,22 +132,23 @@ fn xrpc_parameters(parameters: &LexXrpcParameters) -> Result<TokenStream> {
             properties,
         },
         "Parameters",
+        module_name,
     )
 }
 
-fn xrpc_body(body: &LexXrpcBody, name: &str) -> Result<TokenStream> {
+fn xrpc_body(body: &LexXrpcBody, name: &str, module_name: &Option<String>) -> Result<TokenStream> {
     let description = description(&body.description);
     let schema = if let Some(schema) = &body.schema {
         match schema {
             LexXrpcBodySchema::Ref(r#ref) => {
                 let type_name = format_ident!("{}", name.to_pascal_case());
-                let (description, ref_type) = ref_type(r#ref)?;
+                let (description, ref_type) = ref_type(r#ref, module_name)?;
                 quote! {
                     #description
                     pub type #type_name = #ref_type;
                 }
             }
-            LexXrpcBodySchema::Object(object) => lex_object(object, name)?,
+            LexXrpcBodySchema::Object(object) => lex_object(object, name, module_name)?,
             _ => unimplemented!("{schema:?}"),
         }
     } else {
@@ -201,14 +217,14 @@ fn xrpc_errors(errors: &Option<Vec<LexXrpcError>>) -> Result<TokenStream> {
     })
 }
 
-fn lex_query(query: &LexXrpcQuery) -> Result<TokenStream> {
+fn lex_query(query: &LexXrpcQuery, module_name: &Option<String>) -> Result<TokenStream> {
     let params = if let Some(LexXrpcQueryParameter::Params(parameters)) = &query.parameters {
-        xrpc_parameters(parameters)?
+        xrpc_parameters(parameters, module_name)?
     } else {
         quote!()
     };
     let outputs = if let Some(body) = &query.output {
-        xrpc_body(body, "Output")?
+        xrpc_body(body, "Output", module_name)?
     } else {
         quote!()
     };
@@ -220,14 +236,17 @@ fn lex_query(query: &LexXrpcQuery) -> Result<TokenStream> {
     })
 }
 
-fn lex_procedure(procedure: &LexXrpcProcedure) -> Result<TokenStream> {
+fn lex_procedure(
+    procedure: &LexXrpcProcedure,
+    module_name: &Option<String>,
+) -> Result<TokenStream> {
     let inputs = if let Some(body) = &procedure.input {
-        xrpc_body(body, "Input")?
+        xrpc_body(body, "Input", module_name)?
     } else {
         quote!()
     };
     let outputs = if let Some(body) = &procedure.output {
-        xrpc_body(body, "Output")?
+        xrpc_body(body, "Output", module_name)?
     } else {
         quote!()
     };
@@ -239,10 +258,13 @@ fn lex_procedure(procedure: &LexXrpcProcedure) -> Result<TokenStream> {
     })
 }
 
-fn lex_subscription(subscription: &LexXrpcSubscription) -> Result<TokenStream> {
+fn lex_subscription(
+    subscription: &LexXrpcSubscription,
+    module_name: &Option<String>,
+) -> Result<TokenStream> {
     let params =
         if let Some(LexXrpcSubscriptionParameter::Params(parameters)) = &subscription.parameters {
-            xrpc_parameters(parameters)?
+            xrpc_parameters(parameters, module_name)?
         } else {
             quote!()
         };
@@ -253,8 +275,8 @@ fn lex_subscription(subscription: &LexXrpcSubscription) -> Result<TokenStream> {
     })
 }
 
-fn lex_array(array: &LexArray, name: &str) -> Result<TokenStream> {
-    let (description, array_type) = array_type(array, name, None)?;
+fn lex_array(array: &LexArray, name: &str, module_name: &Option<String>) -> Result<TokenStream> {
+    let (description, array_type) = array_type(array, name, None, module_name)?;
     let type_name = format_ident!("{}", name.to_pascal_case());
     Ok(quote! {
         #description
@@ -272,7 +294,7 @@ fn lex_token(token: &LexToken, name: &str, schema_id: &str) -> Result<TokenStrea
     })
 }
 
-fn lex_object(object: &LexObject, name: &str) -> Result<TokenStream> {
+fn lex_object(object: &LexObject, name: &str, module_name: &Option<String>) -> Result<TokenStream> {
     let description = description(&object.description);
     let derives = derives()?;
     let struct_name = format_ident!("{}Data", name.to_pascal_case());
@@ -294,6 +316,7 @@ fn lex_object(object: &LexObject, name: &str) -> Result<TokenStream> {
             key,
             required.contains(key),
             name,
+            module_name,
         )?);
     }
     Ok(quote! {
@@ -315,9 +338,10 @@ fn lex_object_property(
     name: &str,
     is_required: bool,
     object_name: &str,
+    module_name: &Option<String>,
 ) -> Result<TokenStream> {
     let (description, mut field_type) = match property {
-        LexObjectProperty::Ref(r#ref) => ref_type(r#ref)?,
+        LexObjectProperty::Ref(r#ref) => ref_type(r#ref, module_name)?,
         LexObjectProperty::Union(union) => union_type(
             union,
             format!(
@@ -329,7 +353,7 @@ fn lex_object_property(
         )?,
         LexObjectProperty::Bytes(bytes) => bytes_type(bytes)?,
         LexObjectProperty::CidLink(cid_link) => cid_link_type(cid_link)?,
-        LexObjectProperty::Array(array) => array_type(array, name, Some(object_name))?,
+        LexObjectProperty::Array(array) => array_type(array, name, Some(object_name), module_name)?,
         LexObjectProperty::Blob(blob) => blob_type(blob)?,
         LexObjectProperty::Boolean(boolean) => boolean_type(boolean)?,
         LexObjectProperty::Integer(integer) => integer_type(integer)?,
@@ -381,9 +405,12 @@ fn lex_string(string: &LexString, name: &str) -> Result<TokenStream> {
     })
 }
 
-fn ref_type(r#ref: &LexRef) -> Result<(TokenStream, TokenStream)> {
+fn ref_type(r#ref: &LexRef, module_name: &Option<String>) -> Result<(TokenStream, TokenStream)> {
     let description = description(&r#ref.description);
-    Ok((description, resolve_path(&r#ref.r#ref, "main", &None)?))
+    Ok((
+        description,
+        resolve_path(&r#ref.r#ref, "main", module_name)?,
+    ))
 }
 
 fn union_type(union: &LexRefUnion, enum_name: &str) -> Result<(TokenStream, TokenStream)> {
@@ -413,6 +440,7 @@ fn array_type(
     array: &LexArray,
     name: &str,
     object_name: Option<&str>,
+    module_name: &Option<String>,
 ) -> Result<(TokenStream, TokenStream)> {
     let description = description(&array.description);
     let (_, item_type) = match &array.items {
@@ -420,7 +448,7 @@ fn array_type(
         LexArrayItem::String(string) => string_type(string)?,
         LexArrayItem::Unknown(unknown) => unknown_type(unknown)?,
         LexArrayItem::CidLink(cid_link) => cid_link_type(cid_link)?,
-        LexArrayItem::Ref(r#ref) => ref_type(r#ref)?,
+        LexArrayItem::Ref(r#ref) => ref_type(r#ref, module_name)?,
         LexArrayItem::Union(union) => union_type(
             union,
             format!(
@@ -593,8 +621,13 @@ fn description(description: &Option<String>) -> TokenStream {
     }
 }
 
-fn refs_enum(refs: &[String], name: &str, schema_id: Option<&str>) -> Result<TokenStream> {
-    enum_common(refs, name, schema_id, &[], &None)
+fn refs_enum(
+    refs: &[String],
+    name: &str,
+    schema_id: Option<&str>,
+    module_name: &Option<String>,
+) -> Result<TokenStream> {
+    enum_common(refs, name, schema_id, &[], module_name)
 }
 
 pub fn enum_common(
@@ -792,6 +825,7 @@ pub fn client(
     tree: &HashMap<String, HashSet<(&str, bool)>>,
     schemas: &HashMap<String, &LexUserType>,
     namespaces: &[(String, Option<&str>)],
+    module_name: &Option<String>,
 ) -> Result<TokenStream> {
     let services = client_services("", tree, namespaces)?;
     let mut impls = Vec::new();
@@ -807,8 +841,10 @@ pub fn client(
         for (name, _) in tree[key].iter().filter(|(_, b)| *b).sorted() {
             let nsid = format!("{key}.{name}");
             let method = match schemas[&nsid] {
-                LexUserType::XrpcQuery(query) => xrpc_impl_query(query, &nsid)?,
-                LexUserType::XrpcProcedure(procedure) => xrpc_impl_procedure(procedure, &nsid)?,
+                LexUserType::XrpcQuery(query) => xrpc_impl_query(query, &nsid, module_name)?,
+                LexUserType::XrpcProcedure(procedure) => {
+                    xrpc_impl_procedure(procedure, &nsid, module_name)?
+                }
                 _ => unreachable!(),
             };
             methods.push(method);
@@ -963,7 +999,11 @@ fn client_new(
     })
 }
 
-fn xrpc_impl_query(query: &LexXrpcQuery, nsid: &str) -> Result<TokenStream> {
+fn xrpc_impl_query(
+    query: &LexXrpcQuery,
+    nsid: &str,
+    module_name: &Option<String>,
+) -> Result<TokenStream> {
     let description = description(&query.description);
     let has_params = query.parameters.is_some();
     let output = query.output.as_ref();
@@ -977,7 +1017,7 @@ fn xrpc_impl_query(query: &LexXrpcQuery, nsid: &str) -> Result<TokenStream> {
 
     let mut args = vec![quote!(&self)];
     if has_params {
-        let parameters = resolve_path(nsid, "Parameters", &None)?;
+        let parameters = resolve_path(nsid, "Parameters", module_name)?;
         args.push(quote!(params: #parameters));
     }
     let generic_args = vec![
@@ -995,7 +1035,7 @@ fn xrpc_impl_query(query: &LexXrpcQuery, nsid: &str) -> Result<TokenStream> {
     } else {
         quote!(None)
     };
-    let nsid_path = resolve_path(nsid, "NSID", &None)?;
+    let nsid_path = resolve_path(nsid, "NSID", module_name)?;
     let xrpc_call = quote! {
         self.xrpc.send_xrpc::<#(#generic_args),*>(&atrium_xrpc::XrpcRequest {
             method: http::Method::GET,
@@ -1006,10 +1046,21 @@ fn xrpc_impl_query(query: &LexXrpcQuery, nsid: &str) -> Result<TokenStream> {
         })
         .await?
     };
-    xrpc_impl_common(nsid, &description, &xrpc_call, &args, output_type)
+    xrpc_impl_common(
+        nsid,
+        &description,
+        &xrpc_call,
+        &args,
+        output_type,
+        module_name,
+    )
 }
 
-fn xrpc_impl_procedure(procedure: &LexXrpcProcedure, nsid: &str) -> Result<TokenStream> {
+fn xrpc_impl_procedure(
+    procedure: &LexXrpcProcedure,
+    nsid: &str,
+    module_name: &Option<String>,
+) -> Result<TokenStream> {
     let description = description(&procedure.description);
     let input = procedure.input.as_ref();
     let output = procedure.output.as_ref();
@@ -1023,7 +1074,7 @@ fn xrpc_impl_procedure(procedure: &LexXrpcProcedure, nsid: &str) -> Result<Token
     let mut args = vec![quote!(&self)];
     if let Some(body) = &input {
         if body.schema.is_some() {
-            let input = resolve_path(nsid, "Input", &None)?;
+            let input = resolve_path(nsid, "Input", module_name)?;
             args.push(quote!(input: #input));
         } else {
             args.push(quote!(input: Vec<u8>));
@@ -1062,7 +1113,7 @@ fn xrpc_impl_procedure(procedure: &LexXrpcProcedure, nsid: &str) -> Result<Token
     } else {
         quote!(None)
     };
-    let nsid_path = resolve_path(nsid, "NSID", &None)?;
+    let nsid_path = resolve_path(nsid, "NSID", module_name)?;
     let xrpc_call = quote! {
         self.xrpc.send_xrpc::<#(#generic_args),*>(&atrium_xrpc::XrpcRequest {
             method: http::Method::POST,
@@ -1073,7 +1124,14 @@ fn xrpc_impl_procedure(procedure: &LexXrpcProcedure, nsid: &str) -> Result<Token
         })
         .await?
     };
-    xrpc_impl_common(nsid, &description, &xrpc_call, &args, output_type)
+    xrpc_impl_common(
+        nsid,
+        &description,
+        &xrpc_call,
+        &args,
+        output_type,
+        module_name,
+    )
 }
 
 fn xrpc_impl_common(
@@ -1082,10 +1140,11 @@ fn xrpc_impl_common(
     xrpc_call: &TokenStream,
     args: &[TokenStream],
     output_type: OutputType,
+    module_name: &Option<String>,
 ) -> Result<TokenStream> {
     let name = nsid.split('.').last().unwrap();
     let method_name = format_ident!("{}", name.to_snake_case());
-    let error = resolve_path(nsid, "Error", &None)?;
+    let error = resolve_path(nsid, "Error", module_name)?;
     let body = match output_type {
         OutputType::None => {
             quote! {
@@ -1101,7 +1160,7 @@ fn xrpc_impl_common(
             }
         }
         OutputType::Data => {
-            let output = resolve_path(nsid, "Output", &None)?;
+            let output = resolve_path(nsid, "Output", module_name)?;
             quote! {
                 pub async fn #method_name(
                     #(#args),*
